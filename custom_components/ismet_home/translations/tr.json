@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "İsmet Home",
+        "description": "Hazır ev panosunu ekler. Bir pano oluştur ve ham yapılandırmasına `strategy: type: custom:ismet-home` yaz. Panoyu sol menüdeki \"İsmet Home\" bölümünden düzenle."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Zaten kurulu."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "feeding": {
+        "state": {
+          "ok": "Zamanında",
+          "soon": "Yaklaşıyor",
+          "due": "Zamanı geldi",
+          "late": "Gecikti",
+          "never": "Hiç beslenmedi"
+        }
+      }
+    }
+  },
+  "services": {
+    "feed": {
+      "name": "Besle",
+      "description": "Bir evcil hayvanı beslendi olarak kaydeder (besleme kartındaki gibi).",
+      "fields": {
+        "pet": {
+          "name": "Hayvan",
+          "description": "Hayvanın kimliği ya da adı"
+        },
+        "undo": {
+          "name": "Geri al",
+          "description": "Son beslemeyi geri al"
+        }
+      }
+    },
+    "control": {
+      "name": "Yedekli kontrol",
+      "description": "Işığı açar, kapatır ya da tersine çevirir. Yönetim panelinde yedeği seçilmiş ışık birkaç saniye içinde cevap vermezse aynı komut yedeğe gönderilir.",
+      "fields": {
+        "entity_id": {
+          "name": "Işık",
+          "description": "Işıklar ya da anahtarlar"
+        },
+        "action": {
+          "name": "Eylem",
+          "description": "toggle, turn_on ya da turn_off"
+        },
+        "brightness_pct": {
+          "name": "Parlaklık",
+          "description": "Açarken"
+        },
+        "color_temp_kelvin": {
+          "name": "Renk sıcaklığı",
+          "description": "Açarken"
+        }
+      }
+    }
+  }
+}
