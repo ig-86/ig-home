@@ -1,7 +1,7 @@
 """Constants for İsmet Home."""
 
 DOMAIN = "ismet_home"
-VERSION = "1.0.0"
+VERSION = "1.0.2"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 SIGNAL_UPDATE = f"{DOMAIN}_update"
