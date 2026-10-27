@@ -12,6 +12,68 @@ function lpCardHelpers() {
   if (!LP_CH.p) LP_CH.p = window.loadCardHelpers ? Promise.resolve().then(() => window.loadCardHelpers()).catch(() => null) : Promise.resolve(null);
   return LP_CH.p;
 }
+
+// Yerleşik "Açık Olanlar" kartı (type: ismet-open-entities): açık ışık/anahtarları listeler, tek tek ya da hepsini kapatır.
+// Dış kart (auto-entities, card_mod) gerekmez. Ayarlar (hepsi isteğe bağlı):
+//   domains: [light, switch]        hangi türler listelenir
+//   exclude: ["*kamera*", ...]      varlık kimliği (ya da ad) kalıpları, * joker
+//   title_all: "Hepsini Kapat"      üstteki düğmenin yazısı
+const LP_OPEN_TXT = { tr: { all: 'Hepsini Kapat', none: 'Açık cihaz yok' }, en: { all: 'Turn all off', none: 'Nothing is on' } };
+const LP_OPEN_EXCL = ['*kamera*', '*camera*', '*playstation*', '*_led*', '*_reverse*', '*_touch*', '*guncelleme*', '*upgrade*', '*rahatsiz*', '*figuran*', '*hub_led*'];
+const lpOpenRx = (pat) => new RegExp('^' + String(pat).toLowerCase().replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+function lpOpenList(hass, cfg) {
+  const doms = Array.isArray(cfg.domains) && cfg.domains.length ? cfg.domains : ['light', 'switch'];
+  const ex = (cfg.exclude_defaults === false ? [] : LP_OPEN_EXCL).concat(Array.isArray(cfg.exclude) ? cfg.exclude : []).map(lpOpenRx);
+  const out = [];
+  Object.keys(hass.states || {}).forEach((id) => {
+    const st = hass.states[id];
+    if (doms.indexOf(id.split('.')[0]) < 0 || st.state !== 'on') return;
+    const reg = hass.entities && hass.entities[id];
+    if (reg && (reg.entity_category === 'config' || reg.entity_category === 'diagnostic' || reg.hidden)) return;
+    if (st.attributes && (st.attributes.entity_category === 'config' || st.attributes.entity_category === 'diagnostic')) return;
+    const name = String((st.attributes && st.attributes.friendly_name) || id).toLowerCase();
+    if (ex.some((r) => r.test(id.toLowerCase()) || r.test(name))) return;
+    out.push({ id, name: (st.attributes && st.attributes.friendly_name) || id, st });
+  });
+  out.sort((a, b) => String(a.name).localeCompare(String(b.name), 'tr'));
+  return out;
+}
+class IsmetOpenEntities extends HTMLElement {
+  constructor() { super(); this._cfg = {}; this._key = null; this._lang = 'tr'; }
+  setConfig(cfg, lang) { this._cfg = cfg || {}; this._lang = lang || 'tr'; this._key = null; if (this._hass) this._draw(); }
+  set hass(h) { this._hass = h; this._draw(); }
+  _off(ids) {
+    const h = this._hass;
+    ids.forEach((id) => {
+      if (typeof lpTwinOf === 'function' && lpTwinOf(id)) h.callService('ismet_home', 'control', { entity_id: id, action: 'turn_off' });
+      else h.callService('homeassistant', 'turn_off', { entity_id: id });
+    });
+  }
+  _draw() {
+    const h = this._hass; if (!h) return;
+    const list = lpOpenList(h, this._cfg), T = LP_OPEN_TXT[this._lang] || LP_OPEN_TXT.en;
+    const key = list.map((x) => x.id + '|' + x.name + '|' + ((x.st.attributes && x.st.attributes.icon) || '')).join(',');
+    if (key === this._key) return;
+    this._key = key; this._ids = list.map((x) => x.id);
+    const ic = (x) => (typeof lpIcon === 'function' && typeof lpEntIcon === 'function') ? lpIcon(lpEntIcon(x.st)) : '';
+    this.innerHTML = '<style>.oe{display:flex;flex-direction:column;gap:8px;font-family:inherit}' +
+      '.oe .all{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border-radius:16px;background:#F0A93B;color:#111;font-size:16px;font-weight:700;cursor:pointer;user-select:none}' +
+      '.oe .all:active,.oe .r:active{transform:scale(.98)}' +
+      '.oe .r{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 14px;border-radius:16px;background:#1E2024;cursor:pointer;user-select:none}' +
+      '.oe .r .i{flex:none;width:28px;height:28px;display:grid;place-items:center}.oe .r .i .lic{width:26px;height:26px}.oe .r .i svg{width:100%;height:100%}' +
+      '.oe .r b{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.oe .r .t{flex:none;width:44px;height:26px;border-radius:13px;background:#F0A93B;position:relative}' +
+      '.oe .r .t::after{content:"";position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#111}' +
+      '.oe .none{padding:18px;text-align:center;color:#9aa0a8;font-size:14px}</style><div class="oe">' +
+      (list.length ? '<div class="all" data-all>' + (typeof lpIcon === 'function' ? lpIcon('mdi:power') : '') + '<span>' + esc(this._cfg.title_all || T.all) + ' · ' + list.length + '</span></div>' : '') +
+      (list.length ? list.map((x) => '<div class="r" data-id="' + esc(x.id) + '"><span class="i">' + ic(x) + '</span><b>' + esc(x.name) + '</b><span class="t"></span></div>').join('') : '<div class="none">' + esc(T.none) + '</div>') + '</div>';
+    const all = this.querySelector('[data-all]');
+    if (all) all.addEventListener('click', () => this._off(this._ids.slice()));
+    this.querySelectorAll('[data-id]').forEach((r) => r.addEventListener('click', () => this._off([r.getAttribute('data-id')])));
+  }
+}
+if (!customElements.get('ismet-open-entities')) customElements.define('ismet-open-entities', IsmetOpenEntities);
+
 // ph: kartın konacağı kutu; getHass: güncel hass; onEl(el): kart takılınca (hass güncellemesi için listeye eklenir)
 function lpMountCard(ph, cfg, getHass, lang, onEl) {
   const warn = (msg) => { ph.innerHTML = '<div class="cwarn"><ha-icon icon="mdi:alert-outline"></ha-icon><span>' + esc(msg) + '</span></div>'; };
@@ -25,6 +87,9 @@ function lpMountCard(ph, cfg, getHass, lang, onEl) {
     if (onEl) onEl(el);
     setTimeout(() => { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }, 60);   // grafik kartları boyutunu ölçsün
   };
+  if (cfg.type === 'ismet-open-entities' || cfg.type === 'custom:ismet-open-entities') {
+    const el = document.createElement('ismet-open-entities'); el.setConfig(cfg, lang); put(el); return;
+  }
   lpCardHelpers().then((H) => {
     if (H && H.createCardElement) {
       let el = null;

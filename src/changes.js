@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.7',
+    tr: ['Yerleşik "Açık Olanlar" kartı: pencerede kart olarak type: ismet-open-entities yazılırsa açık ışık ve anahtarlar listelenir, tek tek ya da hepsi kapatılır, kapananlar listeden hemen kalkar. auto-entities ve card_mod gerekmez.'],
+    en: ['Built-in "Turned on" card: use type: ismet-open-entities in a window card to list lights and switches that are on, turn them off one by one or all at once; they leave the list immediately. No auto-entities or card_mod needed.'] },
   { v: '1.0.6',
     tr: ['Bölümleri kopyala/yapıştır: Bölümler listesinde her bölümün yanında kopyala düğmesi, "Yapıştır" ile başka bir sekmeye bütün öğeleri ve ayarlarıyla eklenir.'],
     en: ['Copy/paste sections: every section in the Sections list has a copy button, and "Paste" adds it to another tab with all its items and settings.'] },
