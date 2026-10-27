@@ -711,7 +711,7 @@ class IsmetHomeCard extends HTMLElement {
     const used = [];
     cols.forEach((c, i) => { if (edit || c.some((x) => x.length)) used.push(i); });   // düzenlemede boş kolon da görünür
 
-    // Lemur Light Effect Card kuruluysa üst şeridin sonunda "Efektler": efekt ekranını bu sekmenin odasıyla açar (ayarlardan kapatılabilir)
+    // İsmet Light Effect Card kuruluysa üst şeridin sonunda "Efektler": efekt ekranını bu sekmenin odasıyla açar (ayarlardan kapatılabilir)
     const navFx = lpLecNav(h) ? '<div class="navb fxb" data-navfx><div class="ni">' + lpIcon('mdi:creation') + '</div><div class="nn">' + esc(t(lang, 'effects')) + '</div></div>' : '';
     const navBtns = tabs.map((x) => '<div class="navb' + (x.id === tab.id ? ' sel' : '') + '" data-nav="' + esc(x.id) + '"><div class="ni">' + lpIcon(x.icon || 'mdi:home-outline') + '</div><div class="nn">' + esc(x.name) + '</div></div>').join('');
     const clock0 = '<div class="clock">' + this._time() + '</div>';

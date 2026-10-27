@@ -7,7 +7,7 @@
 const LP_DARK_BG = 'radial-gradient(ellipse at center, #0b0e15 0%, #0b0e15 55%, #0a0c13 100%) fixed';
 
 // Zemin seçenekleri (ayarlar → Arka plan): koyu (varsayılan), siyah, renk, efekt renkleri, resim.
-// Efekt renkleri Lemur Light Effect Card'ın efekt paletleri: her efektin renk tonları (hue), kartın arkasındaki ışıltı gibi
+// Efekt renkleri İsmet Light Effect Card'ın efekt paletleri: her efektin renk tonları (hue), kartın arkasındaki ışıltı gibi
 // koyu zeminin üstüne yumuşak renk lekeleri olarak çizilir. Light Effect Card kurulu olmasa da seçilebilir.
 const LP_BG_FX = [
   ['aurora', 'Kutup ışığı', 'Aurora', [150, 200, 280]], ['fire', 'Ateş', 'Fire', [8, 30]], ['candle', 'Mum ışığı', 'Candlelight', [32, 45]],

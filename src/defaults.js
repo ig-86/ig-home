@@ -8,7 +8,7 @@
 // - Küçük ışık grubunun üyeleri ayrıca gösterilmez; odanın tamamını kapsayan büyük grupta üyeler de görünür.
 // - Şerit/lamba segmentleri, ışığı olan cihazın güç anahtarı ve tarayıcı eklentisi (browser_mod) varlıkları alınmaz.
 // - Parametre isteyen betikler senaryo düğmesi olmaz.
-// - Lemur Light Effect Card kuruluysa efekt ekranı üst şeritteki "Efektler" düğmesinden açılır (kart çizer, burada bir şey eklenmez).
+// - İsmet Light Effect Card kuruluysa efekt ekranı üst şeritteki "Efektler" düğmesinden açılır (kart çizer, burada bir şey eklenmez).
 // - En fazla 6 oda sekmesi; fazlası ve küçük odalar "Diğer"de (sekme sayısı 8'i geçmesin, oda kaybolmasın).
 // - Anahtarlardan (switch) sadece priz ve aydınlatma gibi görünenler alınır; ayar anahtarları ve gizli varlıklar alınmaz.
 // Eski Safari için ?. ve ?? yok.

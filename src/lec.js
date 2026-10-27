@@ -1,4 +1,4 @@
-// Lemur Light Effect Card (LEC) ile birlikte çalışma. LEC pakete girmez, ayrı kurulur; kuruluysa pano:
+// İsmet Light Effect Card (LEC) ile birlikte çalışma. LEC pakete girmez, ayrı kurulur; kuruluysa pano:
 // - senaryolarda "Efekt ekranı" düğmesi: LEC'in tam ekran efekt ekranını sekmenin odasıyla açar,
 // - efekt düğmeleri: seçilen efekti o odada başlatır / durdurur (LEC servisleri play, stop),
 // - oynayan efekti gösterir: o odanın karoları efektin paletiyle parlar, efektin düğmesi yanar,
