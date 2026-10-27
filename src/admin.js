@@ -629,7 +629,7 @@ class IsmetHomeAdmin extends HTMLElement {
   // önizlemenin hass'ı: hayali ev ya da (stilde "Benim evim") senin evin; senin evinde dokunuşlar cihazlara gitmez
   _akHassFor() {
     // hayali evde efektler kurulu gibi görünür (potansiyeli görsün); kendi evinde yalnız kuruluysa
-    const K = this._ak, comps = K.lec && (K.src !== 'mine' || this._akLecOk()) ? ['lemur_light_effects'] : [];
+    const K = this._ak, comps = K.lec && (K.src !== 'mine' || this._akLecOk()) ? ['ismet_light_effects'] : [];
     if (K.src === 'mine') return Object.assign({}, this._hass, { lhdDemo: true, callService: () => Promise.resolve(), config: Object.assign({}, this._hass.config, { components: comps }) });
     return Object.assign({}, this._akDemo, { lhdDemo: true, states: Object.assign({}, this._akDemo.states), config: Object.assign({}, this._akDemo.config, { components: comps }) });
   }
@@ -969,7 +969,7 @@ class IsmetHomeAdmin extends HTMLElement {
       const seg = (path, cur, opts) => '<div class="seg">' + opts.map((o) => '<button data-set="' + path + '" data-val="' + esc(o[0]) + '"' + (cur === o[0] ? ' class="on"' : '') + '>' + esc(o[1]) + '</button>').join('') + '</div>';
       const tg = (path, on) => '<button class="tg' + (on ? ' on' : '') + '" data-tg="' + path + '"></button>';
       const k = s.kiosk || {}, cv = s.canvas || {};
-      const lec = !!(this._hass.config && (this._hass.config.components || []).indexOf('lemur_light_effects') >= 0);
+      const lec = !!(this._hass.config && (this._hass.config.components || []).indexOf('ismet_light_effects') >= 0);
       return '<div class="ov" data-ovl><div class="dlg sm"><div class="dh"><div class="di"><ha-icon icon="mdi:cog-outline"></ha-icon></div><h2>' + t('settings') + '</h2><button class="btn ic" data-a="close"><ha-icon class="s16" icon="mdi:close"></ha-icon></button></div><div class="db">' +
         '<div class="sh">' + t('sVer') + '</div>' + this._updRow() +   // en üstte (Light Effect Card ile aynı)
         '<div class="sh">' + t('s_board') + '</div>' +
@@ -1019,7 +1019,7 @@ class IsmetHomeAdmin extends HTMLElement {
         (K.bg === 'color' ? '<div class="bgsw akbgx">' + LHD_BG_COLORS.map((c) => '<button class="bgc' + (K.bgColor.toLowerCase() === c ? ' on' : '') + '" data-ak="bgc:' + c + '" style="background:' + c + '" title="' + c + '"></button>').join('') +
           '<label class="bgc pick" title="' + t('bgColor') + '"><input type="color" data-akpick value="' + esc(K.bgColor) + '"><ha-icon class="s16" icon="mdi:eyedropper-variant"></ha-icon></label></div>' : '') +
         (K.bg === 'img' ? '<div class="akbgx"><input class="inp w" data-akurl value="' + esc(K.bgUrl || '') + '" placeholder="/local/zemin.jpg" style="width:100%"><span class="hint">' + t('akImgT') + '</span></div>' : '');
-      const lecOk = this._akLecOk(), lecUrl = 'https://my.home-assistant.io/redirect/hacs_repository/?owner=mendebur-lemur&repository=lemur-light-effect-card&category=integration';
+      const lecOk = this._akLecOk(), lecUrl = 'https://my.home-assistant.io/redirect/hacs_repository/?owner=ig-86&repository=ig-light-effect&category=integration';
       const lec = lecOk ? '<div class="akgrid">' + opt('lec:1', K.lec, 'mdi:creation', t('akLecOn'), t('akLecOnT')) + opt('lec:0', !K.lec, 'mdi:creation-outline', t('akLecOff'), '') + '</div>'
         : '<div class="aklec"><ha-icon icon="mdi:creation"></ha-icon><div><b>' + t('akLecWhy') + '</b><span>' + t('akLecHow') + '</span>' +
           '<a class="btn" href="' + lecUrl + '" target="_blank" rel="noopener"><ha-icon class="s16" icon="mdi:download"></ha-icon>' + t('akLecGet') + '</a></div></div>';

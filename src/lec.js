@@ -4,7 +4,7 @@
 // - oynayan efekti gösterir: o odanın karoları efektin paletiyle parlar, efektin düğmesi yanar,
 // - isteğe bağlı: ışık karosuna basılı tutunca HA'nın penceresi yerine LEC ekranı açılır (ayar: lec_hold).
 // LEC'in odaları HA alan kimlikleriyle tutulur (oturma_odasi...), panodaki sekmelerin alanı da aynı; eşleme kendiliğinden.
-const LP_LEC_DOMAIN = 'lemur_light_effects';
+const LP_LEC_DOMAIN = 'ismet_light_effects';
 const LEC = window.__ISMET_HD_LEC || (window.__ISMET_HD_LEC = {
   rooms: null,        // { alan: [ışık, ...] } (LEC'in oda listesi)
   favorites: [], recent: {},
@@ -69,7 +69,7 @@ const LEC = window.__ISMET_HD_LEC || (window.__ISMET_HD_LEC = {
   // LEC'in tam ekran efekt ekranı (LEC'in kendi düğmesi gizli olarak kullanılır; oda verilirse o oda seçili açılır)
   open(h, room) {
     let el = null;
-    try { el = document.createElement('lemur-fullscreen-button'); } catch (e) { el = null; }
+    try { el = document.createElement('ismet-fullscreen-button'); } catch (e) { el = null; }
     if (!el || typeof el.open !== 'function') return false;
     el.setConfig(this.hasRoom(room) ? { room: room } : {});
     el.hass = h;
