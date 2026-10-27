@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.5',
+    tr: ['Öğeleri kopyala/yapıştır: bölümdeki her öğenin yanında kopyala düğmesi, "Yapıştır" düğmesiyle başka bölüm ya da sekmeye eklenir. "Ekle" penceresinde "Kopyalanan ayarları uygula" seçilirse seçtiğin yeni cihazlar aynı simge, renk ve ayarlarla gelir.'],
+    en: ['Copy/paste items: every item in a section has a copy button, and "Paste" adds it to another section or tab. In the "Add" window, "Apply copied settings" adds the devices you pick with the same icon, colour and settings.'] },
   { v: '0.17.6',
     tr: ['Yedek kontrolde yanlış turuncu nokta azaldı: komut hızlı yoldan (ör. Govee LAN) lambaya ulaşıp lamba bunu bildirirse yedek (Matter) birkaç saniye geç kalsa da komut yedekten tekrar gönderilmiyor. Bekleme süresi açarken 5, kapatırken 3 saniye.'],
     en: ['Fewer false orange dots in backup control: when the command reaches the lamp the fast way (e.g. Govee LAN) and the lamp reports it, it is no longer sent again through the backup just because the backup (Matter) is a few seconds late. The wait is 5 seconds when turning on, 3 when turning off.'] },
