@@ -116,14 +116,16 @@ class IsmetAutomations extends HTMLElement {
   _build() {
     const T = (k) => esc(lpAutT(this._lang, k));
     this.innerHTML = '<style>' +
-      '.au{display:flex;flex-direction:column;gap:8px;font-family:inherit;color:#ECEDEF}' +
+      'ismet-automations{display:block;width:100%;max-width:100%;min-width:0;overflow:hidden;contain:inline-size}' +
+      '.au{display:flex;flex-direction:column;gap:8px;font-family:inherit;color:#ECEDEF;width:100%;min-width:0;box-sizing:border-box}' +
+      '.au [data-id],.au .au-l{min-width:0;max-width:100%}' +
       '.au .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}' +
-      '.au input{flex:1 1 160px;min-width:0;height:44px;box-sizing:border-box;padding:0 14px;border-radius:14px;border:1px solid transparent;background:#1E2024;color:inherit;font:inherit;font-size:15px;outline:none}' +
+      '.au input{flex:1 1 100%;min-width:0;height:44px;box-sizing:border-box;padding:0 14px;border-radius:14px;border:1px solid transparent;background:#1E2024;color:inherit;font:inherit;font-size:15px;outline:none}' +
       '.au input:focus{border-color:#F0A93B}' +
-      '.au .ch{flex:none;height:44px;padding:0 14px;border-radius:14px;background:#1E2024;display:flex;align-items:center;font-size:14px;font-weight:600;cursor:pointer;user-select:none;color:#9aa0a8}' +
+      '.au .ch{flex:1 1 0;justify-content:center;height:44px;padding:0 8px;border-radius:14px;background:#1E2024;display:flex;align-items:center;font-size:14px;font-weight:600;cursor:pointer;user-select:none;color:#9aa0a8}' +
       '.au .ch.on{background:#F0A93B;color:#111}' +
       '.au .cnt{font-size:12px;color:#9aa0a8;padding:0 4px}' +
-      '.au .r{display:flex;align-items:center;gap:10px;min-height:56px;padding:6px 10px 6px 12px;border-radius:16px;background:#1E2024}' +
+      '.au .r{display:flex;align-items:center;gap:10px;min-height:56px;padding:6px 10px 6px 12px;border-radius:16px;background:#1E2024;min-width:0;box-sizing:border-box}' +
       '.au .r.sn{outline:2px solid #F0A93B;outline-offset:-2px}' +
       '.au .r .i{flex:none;width:28px;height:28px;display:grid;place-items:center}.au .r .i .lic{width:26px;height:26px}.au .r .i svg{width:100%;height:100%}' +
       '.au .r.off .i{opacity:.45}' +

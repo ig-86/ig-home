@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.10',
+    tr: ['Otomasyonlar ve Açık olanlar kartları dar ekranlarda (telefon) taşmıyor; uzun adlar kısaltılır, anahtarlar hep görünür.'],
+    en: ['The Automations and Turned-on cards no longer overflow on narrow screens (phone); long names are shortened and the switches stay visible.'] },
   { v: '1.0.9',
     tr: ['Işığa çift dokununca onu yöneten otomasyonlar açılır (Ayarlar → Çift dokunma). Oradan her otomasyonu açıp kapatabilir ya da süreli durdurabilirsin. Yalnız otomasyonu olan ışıklarda çalışır; basılı tutunca açılan renk penceresi aynen duruyor.'],
     en: ['Double-tapping a light opens the automations that control it (Settings → Double tap). You can switch each one off or pause it for a while there. Works only on lights that have automations; holding a light still opens the colour window.'] },

@@ -56,10 +56,10 @@ class IsmetOpenEntities extends HTMLElement {
     if (key === this._key) return;
     this._key = key; this._ids = list.map((x) => x.id);
     const ic = (x) => (typeof lpIcon === 'function' && typeof lpEntIcon === 'function') ? lpIcon(lpEntIcon(x.st)) : '';
-    this.innerHTML = '<style>.oe{display:flex;flex-direction:column;gap:8px;font-family:inherit}' +
+    this.innerHTML = '<style>ismet-open-entities{display:block;width:100%;max-width:100%;min-width:0;overflow:hidden;contain:inline-size}.oe{display:flex;flex-direction:column;gap:8px;font-family:inherit;min-width:0}' +
       '.oe .all{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border-radius:16px;background:#F0A93B;color:#111;font-size:16px;font-weight:700;cursor:pointer;user-select:none}' +
       '.oe .all:active,.oe .r:active{transform:scale(.98)}' +
-      '.oe .r{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 14px;border-radius:16px;background:#1E2024;cursor:pointer;user-select:none}' +
+      '.oe .r{display:flex;align-items:center;gap:12px;min-width:0;min-height:52px;padding:6px 14px;border-radius:16px;background:#1E2024;cursor:pointer;user-select:none}' +
       '.oe .r .i{flex:none;width:28px;height:28px;display:grid;place-items:center}.oe .r .i .lic{width:26px;height:26px}.oe .r .i svg{width:100%;height:100%}' +
       '.oe .r b{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.oe .r .t{flex:none;width:44px;height:26px;border-radius:13px;background:#F0A93B;position:relative}' +
