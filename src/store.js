@@ -52,6 +52,11 @@ const STORE = window.__ISMET_HOME_STORE || (window.__ISMET_HOME_STORE = {
           this.data = Object.assign({}, this.data, { fallback: Object.assign({}, this.data.fallback, msg.__fb) });
           const d = this.data; this.subs.forEach((f) => f(d)); return;
         }
+        if (msg && msg.__snooze) {   // otomasyon durdurma süreleri değişti (snooze.py)
+          if (!this.data) return;
+          this.data = Object.assign({}, this.data, { snoozes: msg.__snooze });
+          const d = this.data; this.subs.forEach((f) => f(d)); return;
+        }
         if (msg && msg.__feed) {   // yalnız bir hayvanın besleme kaydı değişti
           if (!this.data) return;
           this.data = Object.assign({}, this.data, { feed: Object.assign({}, this.data.feed, msg.__feed) });

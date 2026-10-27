@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.8',
+    tr: ['Otomasyonlar kartı: Kart ekle → "Otomasyonlar". Bütün otomasyonlar listelenir, arama ve filtre vardır, tek dokunuşla açılıp kapanır. "Durdur" ile 30 dk / 1 sa / 3 sa kapatılır, süre bitince otomasyon kendiliğinden geri açılır (geri sayım görünür, HA yeniden başlasa da kaybolmaz). Yeni servis: ismet_home.snooze_automation.'],
+    en: ['Automations card: Add a card → "Automations". Lists every automation with search and filters and an on/off switch. "Pause" turns one off for 30 min / 1 h / 3 h and it turns itself back on (a countdown shows, and it survives a Home Assistant restart). New service: ismet_home.snooze_automation.'] },
   { v: '1.0.7',
     tr: ['Yerleşik "Açık Olanlar" kartı: pencerede kart olarak type: ismet-open-entities yazılırsa açık ışık ve anahtarlar listelenir, tek tek ya da hepsi kapatılır, kapananlar listeden hemen kalkar. auto-entities ve card_mod gerekmez.'],
     en: ['Built-in "Turned on" card: use type: ismet-open-entities in a window card to list lights and switches that are on, turn them off one by one or all at once; they leave the list immediately. No auto-entities or card_mod needed.'] },

@@ -87,8 +87,9 @@ function lpMountCard(ph, cfg, getHass, lang, onEl) {
     if (onEl) onEl(el);
     setTimeout(() => { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }, 60);   // grafik kartları boyutunu ölçsün
   };
-  if (cfg.type === 'ismet-open-entities' || cfg.type === 'custom:ismet-open-entities') {
-    const el = document.createElement('ismet-open-entities'); el.setConfig(cfg, lang); put(el); return;
+  const nat = String(cfg.type).replace(/^custom:/, '');
+  if (nat === 'ismet-open-entities' || nat === 'ismet-automations') {   // yerleşik kartlar: dış kart gerekmez
+    const el = document.createElement(nat); el.setConfig(cfg, lang); put(el); return;
   }
   lpCardHelpers().then((H) => {
     if (H && H.createCardElement) {

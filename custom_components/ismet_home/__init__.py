@@ -19,12 +19,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from datetime import timedelta
 
 from . import pets as P
 from . import safety as SF
+from . import snooze as SZ
 from . import twins as TW
 
 from .const import (
@@ -47,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 # Empty config means "build the default layout from the home's areas" (done in the browser, src/defaults.js).
 # pets / feed: feeding reminders (pets.py); older stored data simply has none
 # twins / walls: backup control and wall switches (twins.py)
-DEFAULT_DATA: dict[str, Any] = {"version": 1, "settings": {}, "tabs": [], "profiles": {}, "pets": {}, "feed": {}, "twins": {}, "walls": []}
+DEFAULT_DATA: dict[str, Any] = {"version": 1, "settings": {}, "tabs": [], "profiles": {}, "pets": {}, "feed": {}, "twins": {}, "walls": [], "snoozes": {}}
 PLATFORMS = ["sensor", "button"]
 
 
@@ -60,6 +62,7 @@ class PanelData:
         self.data: dict[str, Any] = json.loads(json.dumps(DEFAULT_DATA))
         self._feeder_at: dict[str, Any] = {}   # pet id → last time the feeder service ran (in memory)
         self.twins = TW.Twins(hass, lambda: self.data, self._fallback_used)
+        self.snooze = SZ.Snoozer(self)
 
     @callback
     def _fallback_used(self, eid: str, when: str) -> None:
@@ -180,6 +183,10 @@ class PanelData:
                 _LOGGER.warning("Pet %s: %s", pid, err)
         if dirty:
             self.changed()
+        try:
+            await self.snooze.check()
+        except Exception as err:  # noqa: BLE001 - a snooze problem must not stop the feeding reminders
+            _LOGGER.warning("Snooze check: %s", err)
         async_dispatcher_send(self.hass, SIGNAL_TICK)
 
     async def _tick_pet(self, pid: str, pet: dict, now, tr: bool) -> bool:
@@ -226,7 +233,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _register_static(hass)
         # loaded on every page, so the strategy, the card and the scaling are defined before a dashboard opens
         add_extra_js_url(hass, f"{URL_BASE}/{JS_FILE}?v={VERSION}")
-        for handler in (ws_get, ws_set, ws_season, ws_subscribe, ws_info, ws_feed):
+        for handler in (ws_get, ws_set, ws_season, ws_subscribe, ws_info, ws_feed, ws_snooze):
             websocket_api.async_register_command(hass, handler)
         hass.data[f"{DOMAIN}_static"] = True
 
@@ -254,7 +261,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Optional("brightness_pct"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
         vol.Optional("color_temp_kelvin"): vol.All(vol.Coerce(int), vol.Range(min=1500, max=9000)),
     }))
+    async def _svc_snooze(call) -> None:
+        d = _data(hass)
+        if d is None:
+            return
+        for eid in call.data["entity_id"]:
+            try:
+                await d.snooze.snooze(eid, call.data["minutes"], call.context)
+            except ValueError as err:
+                raise vol.Invalid(f"{eid}: {err}") from err
+
+    hass.services.async_register(DOMAIN, "snooze_automation", _svc_snooze, schema=vol.Schema({
+        vol.Required("entity_id"): vol.All(vol.Any(str, [str]), lambda v: [v] if isinstance(v, str) else v),
+        vol.Optional("minutes", default=60): vol.All(vol.Coerce(int), vol.Range(min=0, max=2880)),
+    }))
     data.twins.listen()
+    async_at_started(hass, data.snooze.start)
     entry.async_on_unload(async_track_time_interval(hass, data.async_tick, timedelta(minutes=1)))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     if PANEL_URL not in hass.data.get("frontend_panels", {}):
@@ -276,9 +298,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.services.async_remove(DOMAIN, "feed")
     hass.services.async_remove(DOMAIN, "control")
+    hass.services.async_remove(DOMAIN, "snooze_automation")
     d = _data(hass)
     if d is not None:
         d.twins.stop()
+        d.snooze.stop()
     hass.data.pop(DOMAIN, None)
     async_remove_panel(hass, PANEL_URL)
     return True
@@ -398,10 +422,32 @@ def ws_season(hass, connection, msg):
 def ws_subscribe(hass, connection, msg):
     @callback
     def _forward(payload):
-        connection.send_message(websocket_api.event_message(msg["id"], payload if ("__feed" in payload or "__fb" in payload) else _for_user(connection, payload)))
+        connection.send_message(websocket_api.event_message(msg["id"], payload if ("__feed" in payload or "__fb" in payload or "__snooze" in payload) else _for_user(connection, payload)))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(hass, SIGNAL_UPDATE, _forward)
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ismet_home/snooze",
+        vol.Required("entity_id"): str,
+        vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=2880)),
+    }
+)
+@websocket_api.async_response
+async def ws_snooze(hass, connection, msg):
+    """Pause an automation for a while (0 = bring it back now). Any signed-in user, like the feeding card."""
+    data = _data(hass)
+    if data is None:
+        connection.send_error(msg["id"], "not_loaded", "Integration not loaded")
+        return
+    try:
+        await data.snooze.snooze(msg["entity_id"], msg["minutes"], connection.context(msg))
+    except ValueError as err:
+        connection.send_error(msg["id"], "invalid", str(err))
+        return
+    connection.send_result(msg["id"], data.snooze.all())
 
 
 @websocket_api.websocket_command({vol.Required("type"): "ismet_home/info"})

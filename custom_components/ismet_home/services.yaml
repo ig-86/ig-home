@@ -42,3 +42,19 @@ control:
           min: 2000
           max: 9000
           unit_of_measurement: K
+snooze_automation:
+  fields:
+    entity_id:
+      required: true
+      example: "automation.giris_isik_sensor"
+      selector:
+        entity:
+          multiple: true
+          domain: automation
+    minutes:
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 2880
+          unit_of_measurement: min

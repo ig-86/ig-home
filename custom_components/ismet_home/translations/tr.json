@@ -59,6 +59,20 @@
           "description": "Açarken"
         }
       }
+    },
+    "snooze_automation": {
+      "name": "Otomasyonu durdur",
+      "description": "Bir otomasyonu bir süre kapatır ve süre bitince kendiliğinden geri açar (0 dakika hemen geri açar).",
+      "fields": {
+        "entity_id": {
+          "name": "Otomasyon",
+          "description": "Durdurulacak otomasyon"
+        },
+        "minutes": {
+          "name": "Dakika",
+          "description": "Ne kadar süre durdurulsun (0: hemen geri aç)"
+        }
+      }
     }
   }
 }

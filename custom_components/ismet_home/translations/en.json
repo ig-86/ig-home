@@ -59,6 +59,20 @@
           "description": "When turning on"
         }
       }
+    },
+    "snooze_automation": {
+      "name": "Pause automation",
+      "description": "Turns an automation off for a while and back on by itself (0 minutes brings it back now).",
+      "fields": {
+        "entity_id": {
+          "name": "Automation",
+          "description": "The automation to pause"
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "How long to pause (0: bring it back now)"
+        }
+      }
     }
   }
 }
