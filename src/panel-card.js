@@ -831,6 +831,14 @@ class IsmetHomeCard extends HTMLElement {
       lpFire(window, 'location-changed', { replace: false });
     }));
     const more = (id) => { if (!this._config.demo) lpFire(this, 'hass-more-info', { entityId: id }); };
+    // çift dokunma: cihazı yöneten otomasyonlar (yalnız otomasyonu olan cihazlarda açık; bkz. src/autocard.js)
+    const dblDom = /^(light|switch|input_boolean|fan)\./;
+    const dblOf = (id, it, tapFn) => {
+      if (this._config.demo || it.tap || it._val || !dblDom.test(id)) return tapFn;
+      const nm = () => this._tx(it.name) || ((this._hass.states[id] || {}).attributes || {}).friendly_name || id;
+      return lpDblTap(tapFn, () => lpAutoPop(this._hass, id, nm(), this._lang), () => lpDblOn() && lpRelHas(id));
+    };
+    if (!this._config.demo && lpDblOn()) lpRelPrefetch(this._hass, this._tiles.concat(this._ents).map((b) => b.getAttribute('data-light') || b.getAttribute('data-ent')).filter((x) => x && dblDom.test(x)));
     this._tiles.forEach((b) => {
       const id = b.getAttribute('data-light');
       // basılı tut: varsayılan bizim ışık penceremiz; ayarda seçildiyse HA'nın penceresi ya da LEC'in efekt ekranı (lambanın odasıyla)
@@ -842,7 +850,7 @@ class IsmetHomeCard extends HTMLElement {
       };
       const it = b._item || {};
       const tap0 = () => this._act(it.tap, id, 'toggle');
-      const tap = () => this._confirm(it, tap0);
+      const tap = dblOf(id, it, () => this._confirm(it, tap0));
       const hold2 = it.hold ? () => this._act(it.hold, id) : hold;   // öğede tap/hold verildiyse o
       if (!b._bar) { lpPress(b, tap, hold2); return; }
       lpSlide(b, {
@@ -865,7 +873,7 @@ class IsmetHomeCard extends HTMLElement {
     this._ents.forEach((b) => {
       const id = b.getAttribute('data-ent'), it = b._item || {}, d = id.split('.')[0];
       const holdDef = () => { const hm = lpHoldMode(); if (!it._val && hm !== 'ha' && (d === 'light' || d === 'switch' || d === 'input_boolean')) this._popOpen(this._hass, id, it, LEC.roomOf(id) || tab.area); else more(id); };
-      lpPress(b, () => this._confirm(it, () => this._act(it.tap, id, it._val ? 'more-info' : 'toggle')), it.hold ? () => this._act(it.hold, id) : holdDef);
+      lpPress(b, dblOf(id, it, () => this._confirm(it, () => this._act(it.tap, id, it._val ? 'more-info' : 'toggle'))), it.hold ? () => this._act(it.hold, id) : holdDef);
     });
     // besleme kartı: dokun "Besledim" (10 sn içinde yeniden dokununca geri alınır), basılı tut son beslemeler
     this._pets.forEach((b) => lpPress(b, () => {

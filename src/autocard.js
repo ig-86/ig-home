@@ -5,11 +5,12 @@
 //   exclude: ["*test*"]         bunlar listelenmez
 //   durations: [30, 60, 180]    "Durdur" süreleri (dakika)
 //   search: true                arama kutusu
+//   related: light.giris        yalnız bu cihazı yöneten otomasyonlar (HA'nın "ilgili" bilgisinden); ışığa çift dokununca bu açılır
 const LP_AUT_TXT = {
   tr: { search: 'Otomasyon ara', all: 'Hepsi', off: 'Kapalı', paused: 'Durdurulan', pause: 'Durdur', resume: 'Şimdi aç', never: 'Hiç çalışmadı', ago: '{t} önce', left: '{t} sonra açılır', disabled: 'Kapalı',
-    none: 'Otomasyon yok', fail: 'Olmadı: {e}', min: 'dk', hr: 'sa', day: 'gün', opening: 'Açılıyor…', count: '{n} otomasyon', pickT: 'Ne kadar durdurulsun?' },
+    none: 'Otomasyon yok', noneRel: 'Bu cihazı yöneten otomasyon bulunamadı', loading: 'Yükleniyor…', popTitle: 'Otomasyonlar', fail: 'Olmadı: {e}', min: 'dk', hr: 'sa', day: 'gün', opening: 'Açılıyor…', count: '{n} otomasyon', pickT: 'Ne kadar durdurulsun?' },
   en: { search: 'Search automations', all: 'All', off: 'Off', paused: 'Paused', pause: 'Pause', resume: 'Turn on now', never: 'Never ran', ago: '{t} ago', left: 'back on in {t}', disabled: 'Off',
-    none: 'No automations', fail: 'Failed: {e}', min: 'min', hr: 'h', day: 'd', opening: 'Turning on…', count: '{n} automations', pickT: 'Pause for how long?' }
+    none: 'No automations', noneRel: 'No automation controls this device', loading: 'Loading…', popTitle: 'Automations', fail: 'Failed: {e}', min: 'min', hr: 'h', day: 'd', opening: 'Turning on…', count: '{n} automations', pickT: 'Pause for how long?' }
 };
 const lpAutT = (lang, k, v) => { let s = (LP_AUT_TXT[lang] || LP_AUT_TXT.en)[k] || k; if (v) Object.keys(v).forEach((x) => { s = s.split('{' + x + '}').join(v[x]); }); return s; };
 const lpAutRx = (pat) => new RegExp('^' + String(pat).toLowerCase().replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
@@ -26,14 +27,63 @@ function lpAutAgo(lang, iso) {
   const x = m < 1 ? '<1 ' + lpAutT(lang, 'min') : m < 60 ? m + ' ' + lpAutT(lang, 'min') : m < 1440 ? Math.round(m / 60) + ' ' + lpAutT(lang, 'hr') : Math.round(m / 1440) + ' ' + lpAutT(lang, 'day');
   return lpAutT(lang, 'ago', { t: x });
 }
+
+// ---- bir cihazı yöneten otomasyonlar (HA: search/related) ve çift dokunma ----
+// Sonuç bellekte tutulur (15 dk). Çift dokunma yalnız otomasyonu olan cihazlarda açıktır; tek dokunuş yalnız bunlarda kısa gecikir.
+const LP_REL = window.__ISMET_HOME_REL || (window.__ISMET_HOME_REL = { m: {}, p: {}, q: [], run: false });
+const LP_REL_TTL = 15 * 60 * 1000, LP_DBL_MS = 280;
+const lpDblOn = () => lpSettings().dbl_auto !== false;
+const lpRelHas = (id) => { const r = LP_REL.m[id]; return !!(r && r.a.length); };
+function lpRelResolve(h, vals) {
+  const S = h.states || {}, out = [];
+  (vals || []).forEach((v) => {
+    let id = typeof v === 'string' && v.indexOf('automation.') === 0 && S[v] ? v : null;
+    if (!id && typeof v === 'string') id = Object.keys(S).filter((k) => k.indexOf('automation.') === 0 && S[k].attributes && S[k].attributes.id === v)[0] || null;   // yapılandırma kimliği geldiyse
+    if (id && out.indexOf(id) < 0) out.push(id);
+  });
+  return out;
+}
+function lpRelated(h, id) {
+  const c = LP_REL.m[id];
+  if (c && Date.now() - c.t < LP_REL_TTL) return Promise.resolve(c.a);
+  if (LP_REL.p[id]) return LP_REL.p[id];
+  const done = (a) => { LP_REL.m[id] = { t: Date.now(), a: a }; delete LP_REL.p[id]; return a; };
+  LP_REL.p[id] = Promise.resolve().then(() => h.callWS({ type: 'search/related', item_type: 'entity', item_id: id }))
+    .then((r) => done(lpRelResolve(h, r && r.automation)), () => done([]));   // alınamazsa (izin yok, eski HA) o cihazda çift dokunma kapalı kalır
+  return LP_REL.p[id];
+}
+function lpRelPrefetch(h, ids) {
+  ids.forEach((id) => { const c = LP_REL.m[id]; if ((!c || Date.now() - c.t >= LP_REL_TTL) && !LP_REL.p[id] && LP_REL.q.indexOf(id) < 0) LP_REL.q.push(id); });
+  if (LP_REL.run) return;
+  LP_REL.run = true;
+  const next = () => {
+    const id = LP_REL.q.shift();
+    if (!id) { LP_REL.run = false; return; }
+    lpRelated(h, id).then(() => setTimeout(next, 120), () => setTimeout(next, 120));
+  };
+  next();
+}
+// tap: tek dokunuş, dbl: çift dokunuş, can(): çift dokunma bu cihazda açık mı. Kapalıysa tek dokunuş hemen çalışır.
+function lpDblTap(tap, dbl, can) {
+  let t = null;
+  return () => {
+    if (t) { clearTimeout(t); t = null; dbl(); return; }
+    if (!can()) { tap(); return; }
+    t = setTimeout(() => { t = null; tap(); }, LP_DBL_MS);
+  };
+}
+function lpAutoPop(h, id, name, lang) {
+  IsmetCardPopup.open(h, { title: (name || id) + ' · ' + lpAutT(lang, 'popTitle'), card: { type: 'ismet-automations', related: id, search: false } }, lang);
+}
 class IsmetAutomations extends HTMLElement {
-  constructor() { super(); this._cfg = {}; this._lang = 'tr'; this._q = ''; this._f = 'all'; this._open = null; this._key = null; this._built = false; this._busy = {}; }
+  constructor() { super(); this._rel = null; this._cfg = {}; this._lang = 'tr'; this._q = ''; this._f = 'all'; this._open = null; this._key = null; this._built = false; this._busy = {}; }
   static getStubConfig() { return { type: 'custom:ismet-automations' }; }
-  setConfig(cfg, lang) { this._cfg = cfg || {}; this._lang = lang || this._lang; this._key = null; if (this._hass) this._draw(); }
+  setConfig(cfg, lang) { this._cfg = cfg || {}; this._lang = lang || this._lang; this._key = null; this._rel = null; if (this._hass) this._load(); }
+  _load() { if (this._cfg.related && this._hass) lpRelated(this._hass, this._cfg.related).then((a) => { this._rel = a; this._key = null; this._draw(); }); this._draw(); }
   set hass(h) {
     const first = !this._hass; this._hass = h;
     if (first && typeof STORE !== 'undefined' && !STORE.data) STORE.load(h).then(() => { this._key = null; this._draw(); }).catch(() => {});
-    this._draw();
+    if (first && this._cfg.related) this._load(); else this._draw();
   }
   connectedCallback() {
     if (typeof STORE !== 'undefined') this._unsub = STORE.onChange(() => { this._key = null; this._draw(); });
@@ -49,6 +99,7 @@ class IsmetAutomations extends HTMLElement {
     const q = this._q.trim().toLowerCase(), out = [];
     Object.keys(S).forEach((id) => {
       if (id.indexOf('automation.') !== 0) return;
+      if (this._cfg.related && (!this._rel || this._rel.indexOf(id) < 0)) return;
       const st = S[id], name = (st.attributes && st.attributes.friendly_name) || id, low = name.toLowerCase();
       if (inc.length && !inc.some((r) => r.test(id.toLowerCase()) || r.test(low))) return;
       if (exc.some((r) => r.test(id.toLowerCase()) || r.test(low))) return;
@@ -141,7 +192,7 @@ class IsmetAutomations extends HTMLElement {
       return '<div data-id="' + esc(x.id) + '"><div class="r' + (x.off ? ' off' : '') + (x.paused ? ' sn' : '') + '"><span class="i">' + lpIcon(x.paused ? 'mdi:timer-outline' : x.off ? 'mdi:robot-off' : 'mdi:robot') + '</span><div class="nm"><b>' + esc(x.name) + '</b>' + sub + '</div>' + btn +
         (x.na ? '' : '<span class="t' + (x.st.state === 'on' ? ' on' : '') + '" data-tg></span>') + '</div>' + pick + '</div>';
     };
-    this.querySelector('[data-list]').innerHTML = (this._err ? '<div class="err">' + esc(this._err) + '</div>' : '') + (L.length ? L.map(rowHtml).join('') : '<div class="none">' + esc(lpAutT(lang, 'none')) + '</div>');
+    this.querySelector('[data-list]').innerHTML = (this._err ? '<div class="err">' + esc(this._err) + '</div>' : '') + (L.length ? L.map(rowHtml).join('') : '<div class="none">' + esc(lpAutT(lang, this._cfg.related ? (this._rel ? 'noneRel' : 'loading') : 'none')) + '</div>');
     this._tick();
   }
   _tick() {
