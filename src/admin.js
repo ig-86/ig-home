@@ -464,8 +464,7 @@ class IsmetHomeAdmin extends HTMLElement {
     else if (U.st === 'ask') { sub = '<b>' + t('updAsk') + '</b>'; ctl = '<button class="btn" data-updno>' + t('cancel') + '</button><button class="btn pri" data-updyes style="background:var(--red);border-color:var(--red);color:#fff">' + t('updYes') + '</button>'; }
     else if (U.st === 'restarting') { sub = '<b class="unew">' + t('updRest') + '</b>'; ctl = ''; }
     else if (U.st === 'err') { sub += ' · <span class="uerr">' + t('updErr', { e: U.err }) + '</span>'; ctl = '<button class="btn" data-updcheck>' + t('updAgain') + '</button>'; }
-    return '<div class="srow upd" style="flex-wrap:wrap"><div class="t"><b>' + t('updT') + '</b><span>' + sub + '</span></div><div class="ubtn">' + ctl + '</div></div>' +
-      '<div class="srow" style="opacity:.65;font-size:12px"><div class="t"><span>Based on Lemur Home Dashboard by mendeburlemur — <a href="https://github.com/mendebur-lemur/lemur-home-dashboard" target="_blank" rel="noopener">github.com/mendebur-lemur/lemur-home-dashboard</a> · GPL-3.0</span></div></div>';
+    return '<div class="srow upd" style="flex-wrap:wrap"><div class="t"><b>' + t('updT') + '</b><span>' + sub + '</span></div><div class="ubtn">' + ctl + '</div></div>';
   }
   _updSet(o) { this._upd = Object.assign({}, this._upd, o); if (this._modal === 'settings') this._render(); }
   // yedek kontrol adayları: aynı alanda, adı aynı (govee / matter / parantez içi ekler hariç) başka bir lamba ya da anahtar
@@ -998,6 +997,8 @@ class IsmetHomeAdmin extends HTMLElement {
         '<div class="sh">' + t('sBackup') + '</div>' +
         '<div class="srow"><div class="t"><b>' + t('bkDown') + '</b><span>' + t('bkDownS') + '</span></div><button class="btn" data-a="bkdown">' + t('bkDown') + '</button></div>' +
         '<div class="srow"><div class="t"><b>' + t('bkUp') + '</b><span>' + t('bkUpS') + '</span></div><label class="btn">' + t('bkUp') + '<input type="file" accept=".json,application/json" data-bkfile style="display:none"></label></div>' +
+        '<div class="sh" style="opacity:.6">' + (this._lang === 'tr' ? 'Hakkında' : 'About') + '</div>' +
+        '<div class="srow" style="opacity:.6;font-size:11px"><div class="t"><span>İsmet Home v' + PANEL_VERSION + ' · GPL-3.0 · ' + (this._lang === 'tr' ? 'değiştirilmiş sürüm' : 'modified version') + '<br>Based on Lemur Home Dashboard by mendeburlemur — <a href="https://github.com/mendebur-lemur/lemur-home-dashboard" target="_blank" rel="noopener">https://github.com/mendebur-lemur/lemur-home-dashboard</a></span></div></div>' +
         '</div><div class="df"><button class="btn" data-a="close">' + t('close') + '</button></div></div></div>';
     }
     if (md === 'auto' && this._ak) {
