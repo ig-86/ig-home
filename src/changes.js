@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.11',
+    tr: ['Telefondaki alt çubuğun adları (Işıklar, İklim, Senaryolar, Diğer) değiştirilebiliyor: Stil seç / Ayarlar → Telefon → Alt çubuk adları.'],
+    en: ['The bottom bar names on the phone (Lights, Climate, Scenes, Other) can be renamed: Choose style / Settings → Phone → Bottom bar names.'] },
   { v: '1.0.10',
     tr: ['Otomasyonlar ve Açık olanlar kartları dar ekranlarda (telefon) taşmıyor; uzun adlar kısaltılır, anahtarlar hep görünür.'],
     en: ['The Automations and Turned-on cards no longer overflow on narrow screens (phone); long names are shortened and the switches stay visible.'] },

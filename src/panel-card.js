@@ -245,9 +245,14 @@ function lpBrightCfg() {
 //   nav: 'cats' (v0.17 varsayılan: altta kategoriler: Işıklar, İklim, Senaryolar...) | 'rooms' (odalar altta) | 'top' (oda düğmeleri üstte, eski düzen)
 //   lights: 'auto' (bölüm ayarındaki gibi, varsayılan) | 'tiles' (karo) | 'rows' (tek sıra, kaydırarak parlaklık)
 //   sheet: ışık penceresi ekranın altından açılır (varsayılan açık; kapatılınca false saklanır)
+// telefon alt çubuğundaki kategori adları: ayarda (phone.names) değiştirilmediyse varsayılan ad
+function lpCatName(lang, c) {
+  const st = lpSettings(), n = lhdIsObj(st.phone) && lhdIsObj(st.phone.names) ? st.phone.names[c] : '';
+  return typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : t(lang, 'c_' + c);
+}
 function lpPhoneCfg() {
   const st = lpSettings(), p = lhdIsObj(st.phone) ? st.phone : {};
-  return { nav: p.nav === 'rooms' || p.nav === 'top' ? p.nav : 'cats', lights: p.lights === 'tiles' || p.lights === 'rows' ? p.lights : 'auto', sheet: p.sheet !== false };
+  return { nav: p.nav === 'rooms' || p.nav === 'top' ? p.nav : 'cats', lights: p.lights === 'tiles' || p.lights === 'rows' ? p.lights : 'auto', sheet: p.sheet !== false, names: lhdIsObj(p.names) ? p.names : {} };
 }
 // iklim kartlarının stili (ayar climate_style): 'halo' (varsayılan, Halo iklim kartı) ya da 'rows' (sade satır: durum, hedef, mod, fan, salınım)
 function lpClimStyle() { const st = lpSettings(); return st.climate_style === 'rows' ? 'rows' : 'halo'; }
@@ -735,8 +740,8 @@ class IsmetHomeCard extends HTMLElement {
     if (pbOn) {
       const fxI = lpLecNav(h) ? '<div class="pbi fxb" data-navfx>' + lpIcon('mdi:creation') + '<span>' + esc(t(lang, 'effects')) + '</span></div>' : '';
       if (cv) {
-        pBar = cv.cats.map((c) => '<div class="pbi' + (c === cv.cat ? ' sel' : '') + '" data-cat="' + c + '">' + lpIcon(LP_CAT_IC[c]) + '<span>' + esc(t(lang, 'c_' + c)) + '</span></div>').join('') + fxI;
-        pHead = '<div class="phd"><b>' + esc(cvPage ? t(lang, 'c_' + cv.cat) : tab.name || '') + '</b>' + clock0 + '</div>' +
+        pBar = cv.cats.map((c) => '<div class="pbi' + (c === cv.cat ? ' sel' : '') + '" data-cat="' + c + '">' + lpIcon(LP_CAT_IC[c]) + '<span>' + esc(lpCatName(lang, c)) + '</span></div>').join('') + fxI;
+        pHead = '<div class="phd"><b>' + esc(cvPage ? lpCatName(lang, cv.cat) : tab.name || '') + '</b>' + clock0 + '</div>' +
           (cvPage && cv.rooms.length ? '<div class="ppills">' + ['all'].concat(cv.rooms.map((T) => T.id)).map((id) => { const T = cv.rooms.filter((x) => x.id === id)[0]; return '<div class="pp' + (id === cv.room ? ' sel' : '') + '" data-room="' + esc(id) + '">' + esc(T ? T.name : t(lang, 'c_all')) + '</div>'; }).join('') + '</div>' : '');
       } else {
         pBar = tabs.map((x) => '<div class="pbi' + (x.id === tab.id ? ' sel' : '') + '" data-nav="' + esc(x.id) + '">' + lpIcon(x.icon || 'mdi:home-outline') + '<span>' + esc(x.name) + '</span></div>').join('') + fxI;
