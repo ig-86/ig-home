@@ -393,3 +393,6 @@ label.btn { cursor: pointer; }
   .akft { flex-wrap: wrap; row-gap: 10px; } .aksum { flex: 1 1 100%; } .akft .btn { flex: 1 1 0; min-width: 0; }
   .akhd .akht span { display: none; }
 }
+
+.si .x { width: 28px; height: 28px; border: none; background: none; color: var(--mu); border-radius: 8px; display: grid; place-items: center; flex: none; cursor: pointer; }
+.si .x:hover { background: var(--s4); color: var(--tx); }

@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.6',
+    tr: ['Bölümleri kopyala/yapıştır: Bölümler listesinde her bölümün yanında kopyala düğmesi, "Yapıştır" ile başka bir sekmeye bütün öğeleri ve ayarlarıyla eklenir.'],
+    en: ['Copy/paste sections: every section in the Sections list has a copy button, and "Paste" adds it to another tab with all its items and settings.'] },
   { v: '1.0.5',
     tr: ['Öğeleri kopyala/yapıştır: bölümdeki her öğenin yanında kopyala düğmesi, "Yapıştır" düğmesiyle başka bölüm ya da sekmeye eklenir. "Ekle" penceresinde "Kopyalanan ayarları uygula" seçilirse seçtiğin yeni cihazlar aynı simge, renk ve ayarlarla gelir.'],
     en: ['Copy/paste items: every item in a section has a copy button, and "Paste" adds it to another section or tab. In the "Add" window, "Apply copied settings" adds the devices you pick with the same icon, colour and settings.'] },

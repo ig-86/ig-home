@@ -5,7 +5,7 @@
 // Ayar yokken pano otomatik düzendedir; ilk değişiklikte o düzen kopyalanıp kaydedilir.
 
 // Kopyala/yapıştır panosu: sayfa açık kaldıkça sekmeler ve bölümler arasında taşınır (kaydedilmez).
-const LHD_CLIP = window.__ISMET_HOME_CLIP || (window.__ISMET_HOME_CLIP = { item: null });
+const LHD_CLIP = window.__ISMET_HOME_CLIP || (window.__ISMET_HOME_CLIP = { item: null, sec: null });
 
 const ADM = {
   tr: {
@@ -44,7 +44,7 @@ const ADM = {
     cardTapT: 'Verilmezse kartın kendi dokunma davranışı', a_defCard: 'Varsayılan: kartın kendisi',
     fillL: 'Doldurma', fillC: 'İçeriğe göre', fillF: 'Kutuyu doldur', fillT: 'Kutuyu doldur: düğmeler ve karolar kutunun yüksekliğine eşit dağılır', alignL: 'Hizalama', alTop: 'Üst', alCenter: 'Orta', alSpread: 'Eşit dağıt',
     sizeL: 'Boyut', sz_row: 'Satır boyu', icSizeL: 'Simge boyutu', txSizeL: 'Yazı boyutu', sz_auto: 'Otomatik', sz_s: 'Küçük', sz_m: 'Orta', sz_l: 'Büyük',
-    tPop: 'Pencerede açar: {t}', imT: 'Öğe ayarları', cpT: 'Bu öğeyi kopyala', cpOk: 'Kopyalandı. Başka bir bölümde "Yapıştır"a bas ya da "Ekle"de ayarları uygula', pasteB: 'Yapıştır', pasteT: 'Kopyalanan öğeyi bu bölüme ekler (aynı cihaz ve ayarlarla)', useClip: 'Kopyalanan ayarları uygula', useClipT: 'Seçtiğin cihazlar kopyaladığın öğenin ayarlarıyla (simge, renk, dokununca, koşul...) eklenir; ad cihazdan gelir', imSave: 'Kaydet', iconOn: 'Açıkken simge', iconOff: 'Kapalıyken simge', tapL: 'Dokununca', holdL: 'Basılı tutunca', actL: 'Ne yapar',
+    tPop: 'Pencerede açar: {t}', imT: 'Öğe ayarları', cpT: 'Bu öğeyi kopyala', cpSecT: 'Bu bölümü kopyala', cpSecOk: 'Bölüm kopyalandı. Başka bir sekmede "Yapıştır"a bas', pasteSec: 'Yapıştır', pasteSecT: 'Kopyalanan bölümü bu sekmeye ekler (bütün öğeleri ve ayarlarıyla)', cpOk: 'Kopyalandı. Başka bir bölümde "Yapıştır"a bas ya da "Ekle"de ayarları uygula', pasteB: 'Yapıştır', pasteT: 'Kopyalanan öğeyi bu bölüme ekler (aynı cihaz ve ayarlarla)', useClip: 'Kopyalanan ayarları uygula', useClipT: 'Seçtiğin cihazlar kopyaladığın öğenin ayarlarıyla (simge, renk, dokununca, koşul...) eklenir; ad cihazdan gelir', imSave: 'Kaydet', iconOn: 'Açıkken simge', iconOff: 'Kapalıyken simge', tapL: 'Dokununca', holdL: 'Basılı tutunca', actL: 'Ne yapar',
     a_defMore: 'Varsayılan: cihaz penceresi', a_defTog: 'Varsayılan: aç / kapat', a_defHold: 'Varsayılan: ışık ya da cihaz penceresi', a_defRun: 'Varsayılan: seçili hedefi çalıştır', a_more: 'Cihaz penceresi', a_tog: 'Aç / kapat', a_none: 'Hiçbir şey',
     a_svc: 'Servis çalıştır', a_pop: 'Pencerede kart aç', a_yaml: 'Gelişmiş (YAML)', svc: 'Servis', tgt: 'Hedef varlık', svcData: 'Veri (YAML, isteğe bağlı)', popTitle: 'Pencere başlığı', cardY: 'Kart (YAML)', actY: 'Eylem (YAML)',
     visL: 'Sadece şu durumda göster', visT: 'Koşul sağlanmazsa öğe panoda hiç çizilmez, yerinde boşluk kalmaz. Önizlemede soluk görünür.', visE: 'Varlık', v_eq: 'şuna eşitse', v_in: 'şunlardan biriyse', v_not: 'şunlar değilse', visV: 'Durum (birden çoksa virgülle)', visNow: 'Şu an: {s}',
@@ -87,7 +87,7 @@ const ADM = {
     cardTapT: 'If not set, the card handles taps itself', a_defCard: 'Default: the card itself',
     fillL: 'Fill', fillC: 'Fit content', fillF: 'Fill the box', fillT: 'Fill the box: buttons and tiles share the box height evenly', alignL: 'Alignment', alTop: 'Top', alCenter: 'Middle', alSpread: 'Spread evenly',
     sizeL: 'Size', sz_row: 'Full row', icSizeL: 'Icon size', txSizeL: 'Text size', sz_auto: 'Auto', sz_s: 'Small', sz_m: 'Medium', sz_l: 'Large',
-    tPop: 'Opens in a window: {t}', imT: 'Item settings', cpT: 'Copy this item', cpOk: 'Copied. Press "Paste" in another section, or apply its settings in "Add"', pasteB: 'Paste', pasteT: 'Adds the copied item to this section (same device and settings)', useClip: 'Apply copied settings', useClipT: 'The devices you pick are added with the copied item\'s settings (icon, colour, tap action, condition...); the name comes from the device', imSave: 'Save', iconOn: 'Icon when on', iconOff: 'Icon when off', tapL: 'On tap', holdL: 'On hold', actL: 'Action',
+    tPop: 'Opens in a window: {t}', imT: 'Item settings', cpT: 'Copy this item', cpSecT: 'Copy this section', cpSecOk: 'Section copied. Press "Paste" in another tab', pasteSec: 'Paste', pasteSecT: 'Adds the copied section to this tab (with all its items and settings)', cpOk: 'Copied. Press "Paste" in another section, or apply its settings in "Add"', pasteB: 'Paste', pasteT: 'Adds the copied item to this section (same device and settings)', useClip: 'Apply copied settings', useClipT: 'The devices you pick are added with the copied item\'s settings (icon, colour, tap action, condition...); the name comes from the device', imSave: 'Save', iconOn: 'Icon when on', iconOff: 'Icon when off', tapL: 'On tap', holdL: 'On hold', actL: 'Action',
     a_defMore: 'Default: more info', a_defTog: 'Default: toggle', a_defHold: 'Default: light or more-info window', a_defRun: 'Default: run the chosen target', a_more: 'More info', a_tog: 'Toggle', a_none: 'Nothing',
     a_svc: 'Call a service', a_pop: 'Open a card in a window', a_yaml: 'Advanced (YAML)', svc: 'Service', tgt: 'Target entity', svcData: 'Data (YAML, optional)', popTitle: 'Window title', cardY: 'Card (YAML)', actY: 'Action (YAML)',
     visL: 'Only show when', visT: 'If the condition is not met the item is not drawn at all and leaves no gap. It shows faded in the preview.', visE: 'Entity', v_eq: 'equals', v_in: 'is one of', v_not: 'is none of', visV: 'State (comma for several)', visNow: 'Now: {s}',
@@ -795,11 +795,11 @@ class IsmetHomeAdmin extends HTMLElement {
     const summary = (s) => { const k = lhdKinds(s), ks = Object.keys(k); return ks.length ? ks.map((x) => this._t(LHD_KIND_KEY[x]) + ' ' + k[x]).join(' · ') : this._t('n_items', { n: 0 }); };
     const secList = tab && (tab.sections || []).length ? '<div class="sl" data-dl="secs">' + tab.sections.map((s) => '<div class="si' + (s.id === this._sec ? ' on' : '') + '" data-di data-sec="' + esc(s.id) + '">' +
       '<span class="hd" data-handle><ha-icon class="s16" icon="mdi:drag-vertical"></ha-icon></span><div class="ti"><ha-icon icon="' + esc((LHD_TYPES[s.type] || {}).icon || 'mdi:shape') + '"></ha-icon></div>' +
-      '<div class="nm"><b>' + esc(s.title || this._t('t_' + (LHD_TYPES[s.type] ? s.type : 'free'))) + '</b><span>' + esc(summary(s)) + '</span></div><span class="cb">' + colName(s) + '</span></div>').join('') + '</div>'
+      '<div class="nm"><b>' + esc(s.title || this._t('t_' + (LHD_TYPES[s.type] ? s.type : 'free'))) + '</b><span>' + esc(summary(s)) + '</span></div><button class="x" data-cpsec="' + esc(s.id) + '" title="' + t('cpSecT') + '"><ha-icon class="s16" icon="mdi:content-copy"></ha-icon></button><span class="cb">' + colName(s) + '</span></div>').join('') + '</div>'
       : '<div class="empty">' + t('noSec') + '</div>';
 
     const ins = '<div class="ins"><div class="sc">' +
-      '<h3>' + t('sections') + '<span class="grow"></span><button class="btn sm" data-a="addsec"><ha-icon class="s16" icon="mdi:plus"></ha-icon>' + t('addSec') + '</button></h3>' + secList +
+      '<h3>' + t('sections') + '<span class="grow"></span>' + (LHD_CLIP.sec ? '<button class="btn sm" data-a="pastesec" title="' + t('pasteSecT') + '"><ha-icon class="s16" icon="mdi:content-paste"></ha-icon>' + t('pasteSec') + '</button> ' : '') + '<button class="btn sm" data-a="addsec"><ha-icon class="s16" icon="mdi:plus"></ha-icon>' + t('addSec') + '</button></h3>' + secList +
       (sec ? this._secEditor(tab, sec, ncols) : '') +
       (this._isAuto() ? '<div class="hint">' + t('autoT') + ' <button class="btn sm" data-a="autokur"><ha-icon class="s16" icon="mdi:auto-fix"></ha-icon>' + t('akT') + '</button></div>' : '') + '<div class="hint">' + t('editNote') + '</div></div></div>';
 
@@ -1345,6 +1345,11 @@ class IsmetHomeAdmin extends HTMLElement {
         // sekmenin kolon sayısı korunur: otomatik düzendeki 3. kolon, kolonu az olan sekmede son kolona düşer
         return editTab((T) => { const n = lpWeights(T).length; T.sections = fresh.sections.map((s) => { const o = Object.assign({}, s, { id: lhdId('s') }); if ((o.col || 0) > n - 1) o.col = n - 1; delete o.sub; return o; }); });
       }
+      if (act === 'pastesec') {
+        const c = LHD_CLIP.sec; if (!c) return;
+        const nid = lhdId('s'); this._sec = nid;
+        return editTab((T) => { const o = lhdClone(c); o.id = nid; const n = lpWeights(T).length; if ((o.col || 0) > n - 1) o.col = n - 1; delete o.sub; T.sections = T.sections || []; T.sections.push(o); });
+      }
       if (act === 'paste') {
         const c = LHD_CLIP.item; if (!c) return;
         return editSec((S) => { S.entities = S.entities || []; const o = lhdClone(c); S.entities.push(Object.keys(o).length === 1 && o.entity ? o.entity : o); });
@@ -1435,6 +1440,13 @@ class IsmetHomeAdmin extends HTMLElement {
       }
       const tb = g('[data-tab]');
       if (tb && !this._dragged) { this._tab = tb.getAttribute('data-tab'); this._sec = null; return this._render(); }
+      const cps = g('[data-cpsec]');
+      if (cps) {
+        const sid = cps.getAttribute('data-cpsec'), tabC = this._curTab(this._work()), secC = tabC && (tabC.sections || []).filter((x) => x.id === sid)[0];
+        if (!secC) return;
+        LHD_CLIP.sec = lhdClone(secC);
+        this._render(); this._toast(this._t('cpSecOk'), false); return;
+      }
       const si = g('.si[data-sec]');
       if (si && !this._dragged && !g('[data-handle]')) { this._sec = si.getAttribute('data-sec'); return this._render(); }
       const sb = g('[data-scr]');
