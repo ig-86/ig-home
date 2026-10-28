@@ -279,23 +279,32 @@ const lpNum = (st) => { const x = st ? parseFloat(st.state) : NaN; return isFini
 
 // kategori görünümünün durumu (hangi kategori, ışıklarda hangi oda): bütün sekme kartları paylaşır
 const LP_PH = window.__ISMET_HD_PH || (window.__ISMET_HD_PH = { cat: null, room: null });
-const LP_CATS = ['lights', 'climate', 'scenes', 'other'];
-const LP_CAT_IC = { lights: 'mdi:lightbulb-group', climate: 'mdi:thermostat', scenes: 'lhd:scene-switch', other: 'mdi:view-grid-outline' };
-const lpSecCat = (s) => (s && (s.type === 'lights' || s.type === 'climate' || s.type === 'scenes') ? s.type : 'other');
+const LP_CATS = ['lights', 'climate', 'scenes', 'auto', 'other'];
+const LP_CAT_IC = { lights: 'mdi:lightbulb-group', climate: 'mdi:thermostat', scenes: 'lhd:scene-switch', auto: 'mdi:robot', other: 'mdi:view-grid-outline' };
+// yalnız "Otomasyonlar" kartından oluşan bölüm kendi kategorisidir (telefonda ayrı sayfa), diğer bölümler "Diğer"e karışmaz
+const lpIsAutoSec = (s) => !!(s && s.entities && s.entities.length && s.entities.every((x) => x && x.card && /^(custom:)?ismet-automations$/.test(String(x.card.type || ''))));
+const lpSecCat = (s) => (s && (s.type === 'lights' || s.type === 'climate' || s.type === 'scenes') ? s.type : (lpIsAutoSec(s) ? 'auto' : 'other'));
 // kategori görünümü: bütün sekmelerin o türdeki bölümleri tek sayfada (her biri sekmenin adıyla). Işıklarda oda oda gezilir
 // ("Tümü" bütün evin ışıkları, aynı cihaz iki sekmede varsa bir kez). Kayıtlı sekmeler değişmez, sayfa yalnız çizilirken kurulur.
 function lpCatView(tabs, cur) {
   const has = (s) => (s.entities || []).length > 0;
-  const cats = LP_CATS.filter((c) => tabs.some((T) => (T.sections || []).some((s) => lpSecCat(s) === c && has(s))));
+  // "Telefonda ayrı düğme" işaretli sekmeler alt çubukta kendi düğmesiyle çıkar; bölümleri kategorilere karışmaz
+  const pages = tabs.filter((T) => T.phone_page && (T.sections || []).some(has));
+  const isPg = (T) => pages.indexOf(T) >= 0;
+  const norm = tabs.filter((T) => !isPg(T));
+  const cats = LP_CATS.filter((c) => norm.some((T) => (T.sections || []).some((s) => lpSecCat(s) === c && has(s)))).concat(pages.map((T) => 'tab:' + T.id));
   if (!cats.length) return null;
   const cat = cats.indexOf(LP_PH.cat) >= 0 ? LP_PH.cat : cats[0];
-  const rooms = cat === 'lights' ? tabs.filter((T) => (T.sections || []).some((s) => lpSecCat(s) === 'lights' && has(s))) : [];
+  const pg = cat.indexOf('tab:') === 0 ? pages.filter((T) => 'tab:' + T.id === cat)[0] : null;
+  const rooms = cat === 'lights' ? norm.filter((T) => (T.sections || []).some((s) => lpSecCat(s) === 'lights' && has(s))) : [];
   const roomIds = ['all'].concat(rooms.map((T) => T.id));
   const room = roomIds.indexOf(LP_PH.room) >= 0 ? LP_PH.room : (rooms.some((T) => T.id === cur.id) ? cur.id : 'all');
   const secs = [], seen = {};
   const one = cat === 'lights' && room !== 'all' ? rooms.filter((T) => T.id === room)[0] : null;
-  (one ? [one] : tabs).forEach((T) => (T.sections || []).forEach((s) => {
-    if (lpSecCat(s) !== cat || !has(s)) return;
+  (pg ? [pg] : one ? [one] : norm).forEach((T) => (T.sections || []).forEach((s) => {
+    if (!has(s)) return;
+    if (pg) { secs.push(Object.assign({}, s, { col: 0, sub: 0 })); return; }
+    if (lpSecCat(s) !== cat) return;
     let ents = s.entities;
     if (cat !== 'scenes' && !one) ents = ents.filter((x) => { const e = lpEnt(x), k = e && e.entity; if (!k) return true; if (seen[k]) return false; seen[k] = 1; return true; });
     if (!ents.length) return;
@@ -308,7 +317,7 @@ function lpCatView(tabs, cur) {
     secs.length = 0;
     secs.push({ id: 'lhd-cat-climate', type: 'climate', title: '', col: 0, sub: 0, entities: all });
   }
-  return { tab: { id: cur.id, name: cur.name, icon: cur.icon, area: one ? one.area || null : null, columns: [1], sections: secs }, cat: cat, cats: cats, rooms: rooms, room: room };
+  return { tab: { id: cur.id, name: cur.name, icon: cur.icon, area: one ? one.area || null : null, columns: [1], sections: secs }, cat: cat, cats: cats, rooms: rooms, room: room, pages: pages };
 }
 
 // Mevsim: ayarda yoksa aya göre (Mayıs-Eylül yaz). Kış'ta petek, Yaz'da klima kartları.
@@ -524,7 +533,7 @@ class IsmetHomeCard extends HTMLElement {
       if (x && x.visible) vis.push(lpVisible(x.visible, S));   // koşullu öğe: koşul değişince iskelet yeniden kurulur
       if (x && x.state_colors) vis.push(lpMapColor(x, S));      // duruma göre renk (Halo kartı yeniden kurulur)
     }));
-    const sig = JSON.stringify([view, pc, this._cat ? [this._cat.cat, this._cat.room] : 0, season, lang, present, vis, tabs.map((x) => [x.id, x.name, x.icon]), lpHas('lemur-hd-climate-card'), LEC.installed(h), lpLecNav(h), lpIsPhone(this._config), !!this._config.edit, this._config.selected || '', !!LP_LECI.map, lpIconMode(), lpIconTint(), lpIconTintLight(), !!LP_MDIC.map, lpNavCfg(), lpClimStyle(), lpBrightCfg()]);
+    const sig = JSON.stringify([view, pc, this._cat ? [this._cat.cat, this._cat.room] : 0, season, lang, present, vis, tabs.map((x) => [x.id, x.name, x.icon, !!x.phone_page]), lpHas('lemur-hd-climate-card'), LEC.installed(h), lpLecNav(h), lpIsPhone(this._config), !!this._config.edit, this._config.selected || '', !!LP_LECI.map, lpIconMode(), lpIconTint(), lpIconTintLight(), !!LP_MDIC.map, lpNavCfg(), lpClimStyle(), lpBrightCfg()]);
     if (sig !== this._sig) { this._sig = sig; this._build(view, tabs, lang, season); }
     this._update();
   }
@@ -740,8 +749,8 @@ class IsmetHomeCard extends HTMLElement {
     if (pbOn) {
       const fxI = lpLecNav(h) ? '<div class="pbi fxb" data-navfx>' + lpIcon('mdi:creation') + '<span>' + esc(t(lang, 'effects')) + '</span></div>' : '';
       if (cv) {
-        pBar = cv.cats.map((c) => '<div class="pbi' + (c === cv.cat ? ' sel' : '') + '" data-cat="' + c + '">' + lpIcon(LP_CAT_IC[c]) + '<span>' + esc(lpCatName(lang, c)) + '</span></div>').join('') + fxI;
-        pHead = '<div class="phd"><b>' + esc(cvPage ? lpCatName(lang, cv.cat) : tab.name || '') + '</b>' + clock0 + '</div>' +
+        pBar = cv.cats.map((c) => { const P = c.indexOf('tab:') === 0 ? cv.pages.filter((T) => 'tab:' + T.id === c)[0] : null; return '<div class="pbi' + (c === cv.cat ? ' sel' : '') + '" data-cat="' + esc(c) + '">' + lpIcon(P ? P.icon || 'mdi:door' : LP_CAT_IC[c]) + '<span>' + esc(P ? P.name || '' : lpCatName(lang, c)) + '</span></div>'; }).join('') + fxI;
+        pHead = '<div class="phd"><b>' + esc(cvPage ? (cv.cat.indexOf('tab:') === 0 ? (cv.pages.filter((T) => 'tab:' + T.id === cv.cat)[0] || {}).name || '' : lpCatName(lang, cv.cat)) : tab.name || '') + '</b>' + clock0 + '</div>' +
           (cvPage && cv.rooms.length ? '<div class="ppills">' + ['all'].concat(cv.rooms.map((T) => T.id)).map((id) => { const T = cv.rooms.filter((x) => x.id === id)[0]; return '<div class="pp' + (id === cv.room ? ' sel' : '') + '" data-room="' + esc(id) + '">' + esc(T ? T.name : t(lang, 'c_all')) + '</div>'; }).join('') + '</div>' : '');
       } else {
         pBar = tabs.map((x) => '<div class="pbi' + (x.id === tab.id ? ' sel' : '') + '" data-nav="' + esc(x.id) + '">' + lpIcon(x.icon || 'mdi:home-outline') + '<span>' + esc(x.name) + '</span></div>').join('') + fxI;

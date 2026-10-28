@@ -3,7 +3,7 @@
 // Ayarlar (hepsi isteğe bağlı):
 //   include: ["*giris*"]        yalnız bu kalıplara uyanlar (varlık kimliği ya da ad, * joker)
 //   exclude: ["*test*"]         bunlar listelenmez
-//   durations: [30, 60, 180]    "Durdur" süreleri (dakika)
+//   durations: [5, 10, 15, 20, 25, 30, 60, 180]    "Durdur" süreleri (dakika)
 //   search: true                arama kutusu
 //   related: light.giris        yalnız bu cihazı yöneten otomasyonlar (HA'nın "ilgili" bilgisinden); ışığa çift dokununca bu açılır
 const LP_AUT_TXT = {
@@ -91,7 +91,7 @@ class IsmetAutomations extends HTMLElement {
   }
   disconnectedCallback() { if (this._unsub) { this._unsub(); this._unsub = null; } clearInterval(this._tm); this._tm = null; }
   _snoozes() { return (typeof STORE !== 'undefined' && STORE.data && STORE.data.snoozes) || {}; }
-  _durs() { const d = Array.isArray(this._cfg.durations) ? this._cfg.durations.map(Number).filter((x) => x > 0 && x <= 2880) : []; return d.length ? d : [30, 60, 180]; }
+  _durs() { const d = Array.isArray(this._cfg.durations) ? this._cfg.durations.map(Number).filter((x) => x > 0 && x <= 2880) : []; return d.length ? d : [5, 10, 15, 20, 25, 30, 60, 180]; }
   _durLabel(m) { return m % 60 === 0 && m >= 60 ? (m / 60) + ' ' + lpAutT(this._lang, 'hr') : m + ' ' + lpAutT(this._lang, 'min'); }
   _list() {
     const S = (this._hass && this._hass.states) || {}, sn = this._snoozes();
@@ -139,7 +139,7 @@ class IsmetAutomations extends HTMLElement {
       '.au .t.on{background:#F0A93B}.au .t.on::after{left:21px}' +
       '.au .pk{display:flex;gap:8px;align-items:center;padding:4px 4px 6px 12px;flex-wrap:wrap}' +
       '.au .pk i{font-style:normal;font-size:12px;color:#9aa0a8;flex:1 1 100%}' +
-      '.au .pk .bt{flex:1 1 0;justify-content:center;height:46px;font-size:15px}' +
+      '.au .pk .bt{flex:1 1 72px;justify-content:center;height:46px;font-size:15px}' +
       '.au .none,.au .err{padding:14px;text-align:center;color:#9aa0a8;font-size:14px}.au .err{color:#FF9592}' +
       '.au .r:active,.au .bt:active,.au .ch:active{transform:scale(.98)}' +
       '</style><div class="au"><div class="bar">' +
