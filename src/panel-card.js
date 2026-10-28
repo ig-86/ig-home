@@ -108,6 +108,11 @@ function lpWeights(tab) {
 }
 const lpEnt = (x) => (typeof x === 'string' ? { entity: x } : (x && x.entity ? x : null));
 // Gömülü kart (Halo) tanımlı mı? customElements.get'e güvenilmez (kayıt defteri değişmiş olabilir), öğeyi oluşturup bakıyoruz.
+// kiosk açma düğmesi: yalnız yönetici görür (ayar kiosk_btn kapatılabilir; dil için adı)
+function lpKioskBtn(h, st) {
+  const u = h && h.user;
+  return !!(u && u.is_admin === true && st && st.kiosk_btn !== false);
+}
 const LP_HAS = {};
 function lpHas(tag) {
   if (LP_HAS[tag]) return true;
@@ -466,7 +471,7 @@ class IsmetHomeCard extends HTMLElement {
     if (!this._unsub) this._unsub = STORE.onChange((d) => {
       this._def = null;
       const st = (d && d.settings) || {};
-      if (!this._config.edit && !this._config.demo) IsmetScale.set(st.canvas || null, st.kiosk || null);   // ölçek ve kiosk ayarı canlı değişsin
+      if (!this._config.edit && !this._config.demo) IsmetScale.set(st.canvas || null, st.kiosk || null, lpKioskBtn(this._hass, st));   // ölçek ve kiosk ayarı canlı değişsin
       this._render();
     });
     if (!this._lecUnsub) this._lecUnsub = LEC.onChange((kind) => {
@@ -499,7 +504,11 @@ class IsmetHomeCard extends HTMLElement {
   _tabs() {
     if (this._config && this._config.demo) return this._config.demo_tabs || [];
     const d = STORE.data;
-    if (d && d.tabs && d.tabs.length) return d.tabs;
+    if (d && d.tabs && d.tabs.length) {
+      // "Sadece yönetici" işaretli sekmeleri yönetici olmayan kullanıcılar görmez (düzenleme önizlemesinde hepsi görünür)
+      const u = this._hass && this._hass.user;
+      return u && u.is_admin === false && !(this._config && this._config.edit) ? d.tabs.filter((x) => !x.admin_only) : d.tabs;
+    }
     if (!this._def) this._def = buildDefaultTabs(this._hass, pickLang(this._hass));
     return this._def;
   }
@@ -538,7 +547,7 @@ class IsmetHomeCard extends HTMLElement {
       if (x && x.visible) vis.push(lpVisible(x.visible, S));   // koşullu öğe: koşul değişince iskelet yeniden kurulur
       if (x && x.state_colors) vis.push(lpMapColor(x, S));      // duruma göre renk (Halo kartı yeniden kurulur)
     }));
-    const sig = JSON.stringify([view, pc, this._cat ? [this._cat.cat, this._cat.room] : 0, season, lang, present, vis, tabs.map((x) => [x.id, x.name, x.icon, !!x.phone_page]), lpHas('lemur-hd-climate-card'), LEC.installed(h), lpLecNav(h), lpIsPhone(this._config), !!this._config.edit, this._config.selected || '', !!LP_LECI.map, lpIconMode(), lpIconTint(), lpIconTintLight(), !!LP_MDIC.map, lpNavCfg(), lpClimStyle(), lpBrightCfg()]);
+    const sig = JSON.stringify([view, pc, this._cat ? [this._cat.cat, this._cat.room] : 0, season, lang, present, vis, tabs.map((x) => [x.id, x.name, x.icon, !!x.phone_page, !!x.admin_only]), lpHas('lemur-hd-climate-card'), LEC.installed(h), lpLecNav(h), lpIsPhone(this._config), !!this._config.edit, this._config.selected || '', !!LP_LECI.map, lpIconMode(), lpIconTint(), lpIconTintLight(), !!LP_MDIC.map, lpNavCfg(), lpClimStyle(), lpBrightCfg()]);
     if (sig !== this._sig) { this._sig = sig; this._build(view, tabs, lang, season); }
     this._update();
   }

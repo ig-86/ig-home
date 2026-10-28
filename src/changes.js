@@ -2,6 +2,11 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.15',
+    tr: ['Sekme ayarlarında "Sadece yönetici": açınca o sekmeyi yalnız yönetici olarak girenler görür (ör. Otomasyonlar).',
+         'Kiosk modunda (yan menü / üst bar gizli) yöneticiye sol altta küçük bir menü düğmesi çıkar; dokununca yan menü ve üst bar açılır, tekrar dokununca gizlenir. Ayarlar → Kiosk\'tan kapatılabilir.'],
+    en: ['"Admins only" in the tab settings: when on, only people signed in as admin see that tab (e.g. Automations).',
+         'In kiosk mode (sidebar / top bar hidden) admins get a small menu button at the bottom left; tap to show the sidebar and top bar, tap again to hide. Can be turned off in Settings → Kiosk.'] },
   { v: '1.0.14',
     tr: ['Telefonda alt çubuğa "Tümü" eklendi: üstte oda düğmeleriyle seçtiğin sekmedeki her şeyi (ışıklar, prizler, sensörler, senaryolar, kartlar) tablettekiyle aynı sırada gösterir. Işıklar sayfasındaki eski "Tümü" düğmesi kalktı. Tümü de diğer düğmeler gibi gizlenebilir ve adı değiştirilebilir.'],
     en: ['Added "All" to the phone bottom bar: with the room buttons on top it shows everything in the chosen tab (lights, plugs, sensors, scenes, cards) in the same order as on the tablet. The old "All" button on the Lights page is gone. All can be hidden and renamed like the other buttons.'] },

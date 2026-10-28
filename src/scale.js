@@ -27,6 +27,24 @@ const IsmetScale = (() => {
     if (!st) { st = document.createElement('style'); st.id = id; host.appendChild(st); }
     if (st.textContent !== css) st.textContent = css;
   }
+  // yönetici için kiosk düğmesi: yan menüyü ve üst barı geçici olarak açıp kapatır (bu sekmede; sayfa yenilenince ayara döner)
+  let show = false;
+  try { show = sessionStorage.getItem('ismet_kiosk_show') === '1'; } catch (e) {}
+  function btn(want) {
+    let b = document.getElementById('ismet-kiosk-btn');
+    if (!want) { if (b) b.remove(); return; }
+    if (!b) {
+      b = document.createElement('button'); b.id = 'ismet-kiosk-btn'; b.type = 'button';
+      b.setAttribute('aria-label', 'HA menü / üst bar');
+      b.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(20,20,26,.75);color:#fff;display:flex;align-items:center;justify-content:center;opacity:.4;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent';
+      b.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/></svg>';
+      b.addEventListener('click', () => { show = !show; try { sessionStorage.setItem('ismet_kiosk_show', show ? '1' : '0'); } catch (e) {} run(); setTimeout(run, 120); try { window.dispatchEvent(new Event('resize')); } catch (e) {} });
+      document.body.appendChild(b);
+    }
+    b.style.opacity = show ? '.85' : '.4';
+    // telefonda altta alt çubuk var: düğme onun üstünde durur
+    b.style.bottom = lpPhoneScreen() ? '84px' : '8px';
+  }
   function apply(canvas, kiosk) {
     const m = mainRoot(); if (!m) return;
     const r = root(m);
@@ -36,9 +54,11 @@ const IsmetScale = (() => {
     // kiosk: yan menü home-assistant-main içinde, üst bar hui-root içinde. Yeni HA (2025.x+) menü genişliğini
     // --ha-sidebar-width ile verir; sadece menüyü gizlemek solda boş şerit bırakıyordu, genişlik de sıfırlanır.
     const k = kiosk || {};
-    style(m, KID, active && k.hide_sidebar ? ':host{--ha-sidebar-width:0px !important;--ha-top-app-bar-width:100% !important}ha-sidebar{display:none !important}ha-drawer{--mdc-drawer-width:0px !important}' : '');
+    const hideSide = !!k.hide_sidebar && !show, hideHead = !!k.hide_header && !show;
+    btn(active && admin && !!(k.hide_sidebar || k.hide_header));
+    style(m, KID, active && hideSide ? ':host{--ha-sidebar-width:0px !important;--ha-top-app-bar-width:100% !important}ha-sidebar{display:none !important}ha-drawer{--mdc-drawer-width:0px !important}' : '');
     if (!sr) return;
-    style(sr, KID, active && k.hide_header ? '.header,.toolbar,app-header,ha-app-layout>[slot=header]{display:none !important}#view,hui-view-container{padding-top:0 !important;min-height:100vh !important}' : '');
+    style(sr, KID, active && hideHead ? '.header,.toolbar,app-header,ha-app-layout>[slot=header]{display:none !important}#view,hui-view-container{padding-top:0 !important;min-height:100vh !important}' : '');
     if (!active) { style(sr, ID, ''); return; }
     // telefon: ölçekleme yok, pano kendi telefon düzenini çizer (panel-card lpIsPhone ile aynı eşik)
     if (lpPhoneScreen()) { style(sr, ID, 'hui-view{min-height:0 !important;}'); return; }
@@ -57,10 +77,10 @@ const IsmetScale = (() => {
     const lh = Math.floor(y / z);
     style(sr, ID, 'hui-view{zoom:' + z + ';width:' + gen + 'px !important;max-width:' + gen + 'px !important;margin:0 auto;flex:0 0 auto !important;min-height:0 !important;height:auto !important;--lp-h:' + lh + 'px;}');
   }
-  let canvas = null, kiosk = null;
+  let canvas = null, kiosk = null, admin = false;
   const run = () => apply(canvas, kiosk);
   window.addEventListener('resize', run);
   window.addEventListener('location-changed', () => { run(); setTimeout(run, 0); setTimeout(run, 100); });
   setInterval(run, 1000);
-  return { set(c, k) { canvas = c; kiosk = k || null; run(); }, run: run };
+  return { set(c, k, a) { canvas = c; kiosk = k || null; admin = !!a; run(); }, run: run };
 })();

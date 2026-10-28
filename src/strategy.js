@@ -60,7 +60,7 @@ class IsmetHomeStrategy extends HTMLElement {
     }
     const tabs = (data.tabs && data.tabs.length) ? data.tabs : buildDefaultTabs(hass, lang);
     const settings = data.settings || {};
-    IsmetScale.set(settings.canvas || null, settings.kiosk || null);
+    IsmetScale.set(settings.canvas || null, settings.kiosk || null, lpKioskBtn(hass, settings));
     // Zemin: ayarda HA'nın görünüm arka planı biçiminde (resim, opaklık...) ya da CSS metni olarak verilebilir; HA kendisi çizer.
     const bg = lpBgOf(settings);
     window.__LHD_VIEWS = tabs.map((x) => x.id);   // kartın gezinmesi bilsin: hangi sekmelerin HA'da görünümü var
