@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.0.14',
+    tr: ['Telefonda alt çubuğa "Tümü" eklendi: üstte oda düğmeleriyle seçtiğin sekmedeki her şeyi (ışıklar, prizler, sensörler, senaryolar, kartlar) tablettekiyle aynı sırada gösterir. Işıklar sayfasındaki eski "Tümü" düğmesi kalktı. Tümü de diğer düğmeler gibi gizlenebilir ve adı değiştirilebilir.'],
+    en: ['Added "All" to the phone bottom bar: with the room buttons on top it shows everything in the chosen tab (lights, plugs, sensors, scenes, cards) in the same order as on the tablet. The old "All" button on the Lights page is gone. All can be hidden and renamed like the other buttons.'] },
   { v: '1.0.13',
     tr: ['Ayarlar → Telefon: alt çubuktaki her düğme (Işıklar, İklim, Senaryolar, Otomasyonlar, Diğer) gizlenebilir; hangi sekmelerin telefonda ayrı düğme olacağı da buradan seçilir.',
          'Otomasyonu durdurma süreleri: 5, 10, 15, 20, 25, 30 dakika, 1 ve 3 saat.',

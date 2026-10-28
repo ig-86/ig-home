@@ -279,8 +279,8 @@ const lpNum = (st) => { const x = st ? parseFloat(st.state) : NaN; return isFini
 
 // kategori görünümünün durumu (hangi kategori, ışıklarda hangi oda): bütün sekme kartları paylaşır
 const LP_PH = window.__ISMET_HD_PH || (window.__ISMET_HD_PH = { cat: null, room: null });
-const LP_CATS = ['lights', 'climate', 'scenes', 'auto', 'other'];
-const LP_CAT_IC = { lights: 'mdi:lightbulb-group', climate: 'mdi:thermostat', scenes: 'lhd:scene-switch', auto: 'mdi:robot', other: 'mdi:view-grid-outline' };
+const LP_CATS = ['all', 'lights', 'climate', 'scenes', 'auto', 'other'];
+const LP_CAT_IC = { all: 'mdi:view-dashboard-outline', lights: 'mdi:lightbulb-group', climate: 'mdi:thermostat', scenes: 'lhd:scene-switch', auto: 'mdi:robot', other: 'mdi:view-grid-outline' };
 // yalnız "Otomasyonlar" kartından oluşan bölüm kendi kategorisidir (telefonda ayrı sayfa), diğer bölümler "Diğer"e karışmaz
 const lpIsAutoSec = (s) => !!(s && s.entities && s.entities.length && s.entities.every((x) => x && x.card && /^(custom:)?ismet-automations$/.test(String(x.card.type || ''))));
 const lpSecCat = (s) => (s && (s.type === 'lights' || s.type === 'climate' || s.type === 'scenes') ? s.type : (lpIsAutoSec(s) ? 'auto' : 'other'));
@@ -293,16 +293,20 @@ function lpCatView(tabs, cur) {
   const isPg = (T) => pages.indexOf(T) >= 0;
   const norm = tabs.filter((T) => !isPg(T));
   const hide = lpPhoneCfg().hide;
-  const cats = LP_CATS.filter((c) => !hide[c] && norm.some((T) => (T.sections || []).some((s) => lpSecCat(s) === c && has(s)))).concat(pages.map((T) => 'tab:' + T.id));
+  const anyTab = (T) => (T.sections || []).some(has);
+  const cats = LP_CATS.filter((c) => !hide[c] && (c === 'all' ? norm.some(anyTab) : norm.some((T) => (T.sections || []).some((s) => lpSecCat(s) === c && has(s))))).concat(pages.map((T) => 'tab:' + T.id));
   if (!cats.length) return null;
   const cat = cats.indexOf(LP_PH.cat) >= 0 ? LP_PH.cat : cats[0];
   const pg = cat.indexOf('tab:') === 0 ? pages.filter((T) => 'tab:' + T.id === cat)[0] : null;
-  const rooms = cat === 'lights' ? norm.filter((T) => (T.sections || []).some((s) => lpSecCat(s) === 'lights' && has(s))) : [];
-  const roomIds = ['all'].concat(rooms.map((T) => T.id));
-  const room = roomIds.indexOf(LP_PH.room) >= 0 ? LP_PH.room : (rooms.some((T) => T.id === cur.id) ? cur.id : 'all');
+  // Işıklar ve Tümü sayfalarında üstte oda düğmeleri: Işıklar o odanın ışıkları, Tümü o sekmedeki her şey (tablettekiyle aynı sırada)
+  const rooms = cat === 'lights' ? norm.filter((T) => (T.sections || []).some((s) => lpSecCat(s) === 'lights' && has(s))) : cat === 'all' ? norm.filter(anyTab) : [];
+  const room = rooms.some((T) => T.id === LP_PH.room) ? LP_PH.room : (rooms.some((T) => T.id === cur.id) ? cur.id : (rooms[0] ? rooms[0].id : null));
   const secs = [], seen = {};
-  const one = cat === 'lights' && room !== 'all' ? rooms.filter((T) => T.id === room)[0] : null;
-  (pg ? [pg] : one ? [one] : norm).forEach((T) => (T.sections || []).forEach((s) => {
+  const one = rooms.length ? rooms.filter((T) => T.id === room)[0] : null;
+  if (cat === 'all' && one) {
+    const ordered = (one.sections || []).map((x, i) => [x, i]).filter((p) => has(p[0])).sort((p, q) => ((p[0].col || 0) - (q[0].col || 0)) || ((p[0].sub || 0) - (q[0].sub || 0)) || (p[1] - q[1]));
+    ordered.forEach((p) => secs.push(Object.assign({}, p[0], { col: 0, sub: 0 })));
+  } else (pg ? [pg] : one ? [one] : norm).forEach((T) => (T.sections || []).forEach((s) => {
     if (!has(s)) return;
     if (pg) { secs.push(Object.assign({}, s, { col: 0, sub: 0 })); return; }
     if (lpSecCat(s) !== cat) return;
@@ -752,7 +756,7 @@ class IsmetHomeCard extends HTMLElement {
       if (cv) {
         pBar = cv.cats.map((c) => { const P = c.indexOf('tab:') === 0 ? cv.pages.filter((T) => 'tab:' + T.id === c)[0] : null; return '<div class="pbi' + (c === cv.cat ? ' sel' : '') + '" data-cat="' + esc(c) + '">' + lpIcon(P ? P.icon || 'mdi:door' : LP_CAT_IC[c]) + '<span>' + esc(P ? P.name || '' : lpCatName(lang, c)) + '</span></div>'; }).join('') + fxI;
         pHead = '<div class="phd"><b>' + esc(cvPage ? (cv.cat.indexOf('tab:') === 0 ? (cv.pages.filter((T) => 'tab:' + T.id === cv.cat)[0] || {}).name || '' : lpCatName(lang, cv.cat)) : tab.name || '') + '</b>' + clock0 + '</div>' +
-          (cvPage && cv.rooms.length ? '<div class="ppills">' + ['all'].concat(cv.rooms.map((T) => T.id)).map((id) => { const T = cv.rooms.filter((x) => x.id === id)[0]; return '<div class="pp' + (id === cv.room ? ' sel' : '') + '" data-room="' + esc(id) + '">' + esc(T ? T.name : t(lang, 'c_all')) + '</div>'; }).join('') + '</div>' : '');
+          (cvPage && cv.rooms.length ? '<div class="ppills">' + cv.rooms.map((T) => '<div class="pp' + (T.id === cv.room ? ' sel' : '') + '" data-room="' + esc(T.id) + '">' + esc(T.name) + '</div>').join('') + '</div>' : '');
       } else {
         pBar = tabs.map((x) => '<div class="pbi' + (x.id === tab.id ? ' sel' : '') + '" data-nav="' + esc(x.id) + '">' + lpIcon(x.icon || 'mdi:home-outline') + '<span>' + esc(x.name) + '</span></div>').join('') + fxI;
         pHead = '<div class="phd"><b>' + esc(tab.name || '') + '</b>' + clock0 + '</div>';
@@ -943,8 +947,8 @@ class IsmetHomeCard extends HTMLElement {
         if (sx === null) return;
         const p = e.changedTouches[0], dx = p.clientX - sx, dy = p.clientY - sy; sx = null;
         if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
-        const ids = ['all'].concat(cvw.rooms.map((T) => T.id)), i = ids.indexOf(cvw.room) + (dx < 0 ? 1 : -1);
-        if (i >= 0 && i < ids.length) goCat('lights', ids[i]);
+        const ids = cvw.rooms.map((T) => T.id), i = ids.indexOf(cvw.room) + (dx < 0 ? 1 : -1);
+        if (i >= 0 && i < ids.length) goCat(cvw.cat, ids[i]);
       }, { passive: true });
     }
   }
