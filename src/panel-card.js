@@ -252,7 +252,7 @@ function lpCatName(lang, c) {
 }
 function lpPhoneCfg() {
   const st = lpSettings(), p = lhdIsObj(st.phone) ? st.phone : {};
-  return { nav: p.nav === 'rooms' || p.nav === 'top' ? p.nav : 'cats', lights: p.lights === 'tiles' || p.lights === 'rows' ? p.lights : 'auto', sheet: p.sheet !== false, names: lhdIsObj(p.names) ? p.names : {} };
+  return { nav: p.nav === 'rooms' || p.nav === 'top' ? p.nav : 'cats', lights: p.lights === 'tiles' || p.lights === 'rows' ? p.lights : 'auto', sheet: p.sheet !== false, names: lhdIsObj(p.names) ? p.names : {}, hide: lhdIsObj(p.hide) ? p.hide : {} };
 }
 // iklim kartlarının stili (ayar climate_style): 'halo' (varsayılan, Halo iklim kartı) ya da 'rows' (sade satır: durum, hedef, mod, fan, salınım)
 function lpClimStyle() { const st = lpSettings(); return st.climate_style === 'rows' ? 'rows' : 'halo'; }
@@ -292,7 +292,8 @@ function lpCatView(tabs, cur) {
   const pages = tabs.filter((T) => T.phone_page && (T.sections || []).some(has));
   const isPg = (T) => pages.indexOf(T) >= 0;
   const norm = tabs.filter((T) => !isPg(T));
-  const cats = LP_CATS.filter((c) => norm.some((T) => (T.sections || []).some((s) => lpSecCat(s) === c && has(s)))).concat(pages.map((T) => 'tab:' + T.id));
+  const hide = lpPhoneCfg().hide;
+  const cats = LP_CATS.filter((c) => !hide[c] && norm.some((T) => (T.sections || []).some((s) => lpSecCat(s) === c && has(s)))).concat(pages.map((T) => 'tab:' + T.id));
   if (!cats.length) return null;
   const cat = cats.indexOf(LP_PH.cat) >= 0 ? LP_PH.cat : cats[0];
   const pg = cat.indexOf('tab:') === 0 ? pages.filter((T) => 'tab:' + T.id === cat)[0] : null;

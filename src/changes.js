@@ -2,12 +2,14 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
-  { v: '1.0.12',
-    tr: ['Otomasyonu durdurma süreleri: 5, 10, 15, 20, 25, 30 dakika, 1 ve 3 saat.',
+  { v: '1.0.13',
+    tr: ['Ayarlar → Telefon: alt çubuktaki her düğme (Işıklar, İklim, Senaryolar, Otomasyonlar, Diğer) gizlenebilir; hangi sekmelerin telefonda ayrı düğme olacağı da buradan seçilir.',
+         'Otomasyonu durdurma süreleri: 5, 10, 15, 20, 25, 30 dakika, 1 ve 3 saat.',
          'Sekmeyi komple kopyalayıp yapıştırabilirsin: sekme ayarlarında "Sekmeyi kopyala", sonra Sekme + düğmesinden "Yapıştır".',
          'Sekme ayarlarında yeni "Telefonda ayrı düğme": açınca o sekme telefonda alt çubukta kendi adı ve simgesiyle ayrı bir sayfa olur.',
          'Telefonda yalnız Otomasyonlar kartından oluşan bölüm kendi sayfası olarak görünür; "Diğer" sayfasına karışmaz.'],
-    en: ['Automation pause durations: 5, 10, 15, 20, 25, 30 minutes, 1 and 3 hours.',
+    en: ['Settings → Phone: every bottom bar button (Lights, Climate, Scenes, Automations, Other) can be hidden; choose here which tabs get their own button on the phone.',
+         'Automation pause durations: 5, 10, 15, 20, 25, 30 minutes, 1 and 3 hours.',
          'Copy and paste a whole tab: "Copy tab" in the tab settings, then "Paste" from the Tab + button.',
          'New "Own button on phone" in the tab settings: that tab becomes its own page in the phone bottom bar with its own name and icon.',
          'On the phone, a section made only of the Automations card now has its own page instead of being mixed into "Other".'] },
