@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.1.2',
+    tr: ['Açıklama sayfasına İngilizce bölüm eklendi. Panoda değişiklik yok.'],
+    en: ['The description page now has an English section. No changes to the dashboard.'] },
   { v: '1.1.1',
     tr: ['Açıklama sayfası yenilendi: bütün özellikler ve kurulum adım adım anlatılıyor. Panoda değişiklik yok.'],
     en: ['The description page was rewritten: every feature and the installation are explained step by step. No changes to the dashboard.'] },
