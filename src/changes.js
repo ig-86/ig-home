@@ -3,15 +3,13 @@
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
   { v: '1.1.0',
-    tr: ['Lemur Home Dashboard 0.21.4\'ün yenilikleri eklendi (İsmet Home\'un kendi özellikleri aynen duruyor):',
-         'Kameralar: Cihaz ekle\'den kamera seçince anlık görüntü karosu (yenileme 5 sn - 1 dk), dokununca neredeyse tam ekran canlı görüntü. Görüntü gelmezse "Görüntü alınamıyor", birkaç saniye içinde yeniden deneniyor. Görüntü yalnız Home Assistant\'ın kendi adresinden yükleniyor.',
+    tr: ['Kameralar: Cihaz ekle\'den kamera seçince anlık görüntü karosu (yenileme 5 sn - 1 dk), dokununca neredeyse tam ekran canlı görüntü. Görüntü gelmezse "Görüntü alınamıyor", birkaç saniye içinde yeniden deneniyor. Görüntü yalnız Home Assistant\'ın kendi adresinden yükleniyor.',
          'Kameralar sekmesi: + Sekme menüsünde bütün kameraları tek sekmede toplar. Kamera bölümünde "Satırda kaç kamera" ve "Görüntü yenileme" ayarı. Telefonda alt çubukta Kameralar sayfası (Ayarlar → Telefon\'dan gizlenebilir, adı değiştirilebilir).',
          'Canlı sürükle bırak: düzenlerken öğeler, bölüm kutuları ve sağdaki listeler sürüklenince parmağı izliyor, ötekiler canlı olarak kenara kayıyor.',
          'Home Assistant 2026.11 Marketplace desteği: Sürüm bölümü yeni sürümü Marketplace\'te de görüyor ve indiriyor (HACS\'ta da çalışmaya devam ediyor).',
          'Yavaş tabletlerde "Timeout waiting for strategy element" hatasına karşı küçük yükleyici: pano hemen tanınıyor, ana dosya arkadan yükleniyor.',
          'Oda düğmeleri kolona hizalıyken kolonu az sekmede kaymıyor; indirilmiş ama yeniden başlatılmamış sürüm doğru bildiriliyor.'],
-    en: ['Added the new features of Lemur Home Dashboard 0.21.4 (all İsmet Home features stay as they were):',
-         'Cameras: pick a camera in Add device for a snapshot tile (refresh 5 s - 1 min); tap it for an almost full-screen live view. Shows "No picture" if no image comes and retries within seconds. Pictures only load from Home Assistant\'s own address.',
+    en: ['Cameras: pick a camera in Add device for a snapshot tile (refresh 5 s - 1 min); tap it for an almost full-screen live view. Shows "No picture" if no image comes and retries within seconds. Pictures only load from Home Assistant\'s own address.',
          'Cameras tab: the + Tab menu puts all cameras in one tab. Camera sections have "Cameras per row" and "Picture refresh". Phones get a Cameras page in the bottom bar (can be hidden or renamed in Settings → Phone).',
          'Live drag and drop: while editing, items, section boxes and the lists on the right follow your finger and the others move aside live.',
          'Home Assistant 2026.11 Marketplace support: the Version section finds and downloads new versions from the Marketplace too (HACS still works).',
