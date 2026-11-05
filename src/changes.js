@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.1.1',
+    tr: ['Açıklama sayfası yenilendi: bütün özellikler ve kurulum adım adım anlatılıyor. Panoda değişiklik yok.'],
+    en: ['The description page was rewritten: every feature and the installation are explained step by step. No changes to the dashboard.'] },
   { v: '1.1.0',
     tr: ['Kameralar: Cihaz ekle\'den kamera seçince anlık görüntü karosu (yenileme 5 sn - 1 dk), dokununca neredeyse tam ekran canlı görüntü. Görüntü gelmezse "Görüntü alınamıyor", birkaç saniye içinde yeniden deneniyor. Görüntü yalnız Home Assistant\'ın kendi adresinden yükleniyor.',
          'Kameralar sekmesi: + Sekme menüsünde bütün kameraları tek sekmede toplar. Kamera bölümünde "Satırda kaç kamera" ve "Görüntü yenileme" ayarı. Telefonda alt çubukta Kameralar sayfası (Ayarlar → Telefon\'dan gizlenebilir, adı değiştirilebilir).',

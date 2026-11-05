@@ -1,4 +1,4 @@
-/*! İsmet Home yükleyici v1.1.0 */
+/*! İsmet Home yükleyici v1.1.1 */
 // Her sayfaya yüklenen küçük dosya (2026-11-04, GitHub #3).
 // Ana dosya ~700 KB. Yavaş tabletlerde ve HA Android uygulamasında, HA'nın pano stratejisini
 // bekleme süresi dolmadan inip çalışamıyor, pano "Timeout waiting for strategy element" veriyordu.
@@ -6,7 +6,7 @@
 // ana dosyanın yüklenmesi beklenir ve iş asıl stratejiye devredilir.
 (function () {
   var NAME = 'll-strategy-dashboard-ismet-home';
-  var MAIN = '/ismet_home/ismet-home.js?v=1.1.0';
+  var MAIN = '/ismet_home/ismet-home.js?v=1.1.1';
   var W = window;
   var loading = null;
 
