@@ -284,11 +284,13 @@ const lpNum = (st) => { const x = st ? parseFloat(st.state) : NaN; return isFini
 
 // kategori görünümünün durumu (hangi kategori, ışıklarda hangi oda): bütün sekme kartları paylaşır
 const LP_PH = window.__ISMET_HD_PH || (window.__ISMET_HD_PH = { cat: null, room: null });
-const LP_CATS = ['all', 'lights', 'climate', 'scenes', 'auto', 'other'];
-const LP_CAT_IC = { all: 'mdi:view-dashboard-outline', lights: 'mdi:lightbulb-group', climate: 'mdi:thermostat', scenes: 'lhd:scene-switch', auto: 'mdi:robot', other: 'mdi:view-grid-outline' };
+const LP_CATS = ['all', 'lights', 'climate', 'scenes', 'camera', 'auto', 'other'];
+const LP_CAT_IC = { all: 'mdi:view-dashboard-outline', lights: 'mdi:lightbulb-group', climate: 'mdi:thermostat', scenes: 'lhd:scene-switch', camera: 'mdi:cctv', auto: 'mdi:robot', other: 'mdi:view-grid-outline' };
 // yalnız "Otomasyonlar" kartından oluşan bölüm kendi kategorisidir (telefonda ayrı sayfa), diğer bölümler "Diğer"e karışmaz
 const lpIsAutoSec = (s) => !!(s && s.entities && s.entities.length && s.entities.every((x) => x && x.card && /^(custom:)?ismet-automations$/.test(String(x.card.type || ''))));
-const lpSecCat = (s) => (s && (s.type === 'lights' || s.type === 'climate' || s.type === 'scenes') ? s.type : (lpIsAutoSec(s) ? 'auto' : 'other'));
+// kamera: kamera bölümü ya da yalnız kameralardan oluşan bölüm (Kameralar kategorisi bütün sekmelerin kameralarını toplar)
+const lpCamOnly = (s) => (s.entities || []).length > 0 && s.entities.every((x) => { const e = lpEnt(x); return !!e && String(e.entity).indexOf('camera.') === 0; });
+const lpSecCat = (s) => (!s ? 'other' : s.type === 'lights' || s.type === 'climate' || s.type === 'scenes' ? s.type : s.type === 'camera' || lpCamOnly(s) ? 'camera' : lpIsAutoSec(s) ? 'auto' : 'other');
 // kategori görünümü: bütün sekmelerin o türdeki bölümleri tek sayfada (her biri sekmenin adıyla). Işıklarda oda oda gezilir
 // ("Tümü" bütün evin ışıkları, aynı cihaz iki sekmede varsa bir kez). Kayıtlı sekmeler değişmez, sayfa yalnız çizilirken kurulur.
 function lpCatView(tabs, cur) {
@@ -495,6 +497,7 @@ class IsmetHomeCard extends HTMLElement {
     if (this._mdicUnsub) { this._mdicUnsub(); this._mdicUnsub = null; }
     clearInterval(this._clock); this._clock = null;
     clearInterval(this._tmr); this._tmr = null;
+    clearInterval(this._camT); this._camT = null;
     if (this._rsz) { window.removeEventListener('resize', this._rsz); this._rsz = null; }
     if (this._edMove) { window.removeEventListener('pointermove', this._edMove); window.removeEventListener('pointerup', this._edUp); window.removeEventListener('pointercancel', this._edUp); this._edMove = null; }
     if (this._edRO) { this._edRO.disconnect(); this._edRO = null; }
@@ -557,7 +560,7 @@ class IsmetHomeCard extends HTMLElement {
     tab = lhdNormTab(tab);
     const h = this._hass, S = h.states;
     if (this.getAttribute('lang') !== lang) this.setAttribute('lang', lang);
-    const tiles = [], tileItems = [], rows = [], embeds = [], vals = [], cards = [], visW = [], ssItems = [], clrs = [];
+    const tiles = [], tileItems = [], rows = [], embeds = [], vals = [], cards = [], visW = [], ssItems = [], clrs = [], cams = [];
     // şablonlu (A6) sabit yazılar: yer tutucu span, _update'te doldurulur
     const txs = (s) => (lpIsTpl(s) ? '<span data-tx="' + esc(s) + '">…</span>' : esc(s));
     const lecRooms = {};   // bu sekmede LEC'ten oynayan efekti sorulacak odalar
@@ -687,11 +690,16 @@ class IsmetHomeCard extends HTMLElement {
       const items = items0.filter((x, i, arr) => !x._catSub || (arr[i + 1] && !arr[i + 1]._catSub));
       if (!items.length) return null;
       const groups = [];
-      items.forEach((x) => { const g = groups[groups.length - 1]; if (g && g.k === x._k && (x._k === 'tile' || x._k === 'vrow' || x._k === 'pet')) g.items.push(x); else groups.push({ k: x._k, items: [x] }); });
+      items.forEach((x) => { const g = groups[groups.length - 1]; if (g && g.k === x._k && (x._k === 'tile' || x._k === 'vrow' || x._k === 'pet' || x._k === 'camera')) g.items.push(x); else groups.push({ k: x._k, items: [x] }); });
       const hasTiles = groups.some((g) => g.k === 'tile'), onlyTiles = groups.length === 1 && hasTiles;
       const html = groups.map((g) => {
         if (g.k === 'tile') return tileGrid(s, g.items, onlyTiles);
         // besleme kartları: kutuya sığdığı kadar yan yana (en az 220 px)
+        // kameralar: anlık görüntü karosu (16:9); kutuya sığdığı kadar yan yana, her biri en az 240 px (telefonda tek sütun). Dokununca canlı görüntü penceresi
+        // "Satırda kaç kamera" (s.cam_columns 1-4) seçiliyse o kadar; telefonda en fazla 2
+        const camN = Math.max(0, Math.min(4, +s.cam_columns || 0)), camP = phone ? Math.min(camN || 1, 2) : camN;
+        if (g.k === 'camera') return '<div class="cams" style="grid-template-columns:' + (camP ? 'repeat(' + camP + ',minmax(0,1fr))' : 'repeat(auto-fit,minmax(240px,1fr))') + '">' +
+          g.items.map((x) => { cams.push(Object.assign({}, x, { _secRef: s.cam_refresh })); return '<div class="cam" data-cam="' + esc(x.entity) + '" data-cmi="' + (cams.length - 1) + '"' + hidA(x) + mark(x._i) + '><img alt="" draggable="false"><div class="cof">' + lpIcon('mdi:video-off') + '<span class="c0">' + esc(t(lang, 'cam_off')) + '</span><span class="c1">' + esc(t(lang, 'cam_nopic')) + '</span></div><div class="cnm"></div></div>'; }).join('') + '</div>';
         if (g.k === 'pet') return '<div class="pets">' + g.items.map((x) => '<div class="petc" data-pet="' + esc(x.pet) + '"' + hidA(x) + mark(x._i) + '></div>').join('') + '</div>';
         // satırlar: ince yatay satırlar, kutuya sığdığı kadar yan yana (en az 170 px)
         if (g.k === 'vrow') return '<div class="vrows" style="grid-template-columns:repeat(' + (phone ? 1 : Math.max(1, Math.min(s.row_columns || 3, g.items.length))) + ',minmax(0,1fr))">' +
@@ -750,11 +758,20 @@ class IsmetHomeCard extends HTMLElement {
     const nc = lpNavCfg(), nst = (nc.w ? '--lp-nav-w:' + nc.w + 'px;' : '') + (nc.h ? '--lp-nav-h:' + nc.h + 'px;' : '');
     // kolona hizala: düğmeler ilk N kolonun üstünü eşit paylaşır, sağ kenarları N. kolonun kutusuyla aynı çizgide biter;
     // Efektler (içeride değilse) ve saat kalan kolonların üstünde. Telefonda ve kolon sayısı yetmezse normal şerit.
-    const navCols = !phone && nc.cols > 0 && nc.cols < used.length ? nc.cols : 0;
-    const nav = navCols
-      ? '<div class="nav navl" style="grid-area:1 / 1 / 2 / ' + (navCols + 1) + ';' + nst + '">' + navBtns + (nc.fx_in ? navFx : '') + '</div>' +
-        '<div class="nav navr" style="grid-area:1 / ' + (navCols + 1) + ' / 2 / -1;' + nst + '">' + (nc.fx_in ? '' : navFx) + clock + '</div>'
+    // Kolonu az olan sekmede (ör. tek sütunluk Kameralar sekmesi) şerit kaymasın: hizalama yeterli kolonu olan ilk sekmenin
+    // kolonlarına göre yapılır; şerit o kolon oranlarıyla ayrı bir ızgarada çizilir (aynı aralıkla, böylece düğmeler aynı yerde kalır).
+    let navCols = !phone && nc.cols > 0 && nc.cols < used.length ? nc.cols : 0, navRef = null;
+    if (!phone && nc.cols > 0 && !navCols) {
+      const refUsed = (T) => { const w = lpWeights(T), u = []; w.forEach((x, i) => { if ((T.sections || []).some((s) => Math.min(Math.max(0, +s.col || 0), w.length - 1) === i && (s.entities || []).length)) u.push(w[i]); }); return u; };
+      for (let k = 0; k < tabs.length && !navRef; k++) { if (tabs[k].id === tab.id) continue; const u = refUsed(tabs[k]); if (u.length > nc.cols) navRef = u; }
+      if (navRef) navCols = nc.cols;
+    }
+    const navPos = (a, b) => (navRef ? 'grid-column:' + a + ' / ' + b + ';grid-row:1;' : 'grid-area:1 / ' + a + ' / 2 / ' + b + ';');
+    const nav0 = navCols
+      ? '<div class="nav navl" style="' + navPos(1, navCols + 1) + nst + '">' + navBtns + (nc.fx_in ? navFx : '') + '</div>' +
+        '<div class="nav navr" style="' + navPos(navCols + 1, -1) + nst + '">' + (nc.fx_in ? '' : navFx) + clock + '</div>'
       : '<div class="nav"' + (nst ? ' style="' + nst + '"' : '') + '>' + navBtns + navFx + clock + '</div>';
+    const nav = navRef ? '<div class="navg" style="grid-area:h;display:grid;grid-column-gap:12px;min-width:0;grid-template-columns:' + navRef.map((w) => 'minmax(0,' + w + 'fr)').join(' ') + '">' + nav0 + '</div>' : nav0;
     // telefon: odalar ya da kategoriler altta (uygulama gibi); üstte yalnız sayfanın adı ve saat
     const pcf = lpPhoneCfg(), pbOn = phone && pcf.nav !== 'top';
     // önizlemede (düzenleme) kategori çubuğu görünür ama sayfa sekmenin kendisidir: üstte sekmenin adı
@@ -827,6 +844,9 @@ class IsmetHomeCard extends HTMLElement {
     this._txEls = Array.prototype.slice.call(R.querySelectorAll('[data-tx]'));
     this._ssEls = []; R.querySelectorAll('[data-ss]').forEach((el) => { el._item = ssItems[+el.getAttribute('data-ss')]; this._ssEls.push(el); });
     this._pets = []; R.querySelectorAll('[data-pet]').forEach((el) => this._pets.push(el));
+    // kameralar: görüntü birkaç saniyede bir yenilenir (öğe ayarı refresh, yoksa bölüm ayarı cam_refresh, sn; varsayılan 10). Sekme görünmüyorsa yenilenmez.
+    this._cams = []; R.querySelectorAll('[data-cam]').forEach((el) => { el._item = cams[+el.getAttribute('data-cmi')]; el._at = 0; this._cams.push(el); });
+    clearInterval(this._camT); this._camT = this._cams.length ? setInterval(() => this._camTick(), 1000) : null;
     this._ents = []; R.querySelectorAll('[data-ent]').forEach((el) => { el._item = ents[+el.getAttribute('data-ei')]; this._ents.push(el); });
     this._vals = []; R.querySelectorAll('[data-val]').forEach((el) => { el._item = vals[+el.getAttribute('data-vi')]; el._bar = el.classList.contains('bar'); el._wide = el.hasAttribute('data-wide'); this._vals.push(el); });
     this._tiles = []; R.querySelectorAll('[data-light]').forEach((el) => { el._item = tileItems[+el.getAttribute('data-ti')]; el._bar = el.classList.contains('bar'); el._wide = el.hasAttribute('data-wide'); this._tiles.push(el); });
@@ -838,13 +858,14 @@ class IsmetHomeCard extends HTMLElement {
     this._lecRooms = Object.keys(lecRooms).filter((r) => LEC.hasRoom(r));
     const lecLights = [];
     this._lecRooms.forEach((r) => LEC.lightsOf(r).forEach((id) => { if (tiles.indexOf(id) < 0 && lecLights.indexOf(id) < 0) lecLights.push(id); }));
-    this._watched = tiles.concat(rows, clrW, lecLights, vals.concat(ents, ssItems).map((x) => x.entity).filter((x) => x && tiles.indexOf(x) < 0), visW);
+    this._watched = tiles.concat(rows, clrW, lecLights, cams.map((x) => x.entity), vals.concat(ents, ssItems).map((x) => x.entity).filter((x) => x && tiles.indexOf(x) < 0), visW);
     if (!edit && LEC.installed(h)) this._lecRooms.forEach((r) => LEC.query(h, r));
     this._last = {};
     this._lang = lang;
 
     // düzenleme modu (yönetim panelindeki önizleme): cihazlara dokunulmaz; tıklama seçer, sürükleme taşır, çizgiler boyutlandırır
     if (edit) { this._editBind(R, tab, widths, used); return; }
+    (this._cams || []).forEach((el) => lpPress(el, () => this._camOpen(el)));
     const bbEl = R.querySelector('[data-bbar]');
     if (bbEl) this._bbBind(bbEl);
     // dokunuşlar
@@ -1051,7 +1072,24 @@ class IsmetHomeCard extends HTMLElement {
         if (Math.abs(e.clientX - D.sx) + Math.abs(e.clientY - D.sy) < 6) return;
         D.on = true;
         if (D.kind === 'box' || D.kind === 'item') D.el.classList.add('dragging');
-        if (D.kind === 'col' || D.kind === 'row') arr(R.querySelectorAll('.colh,.rowh')).forEach((x) => { if (x !== D.el) x.style.display = 'none'; });
+        // kutu: küçük bir başlık kartı imleci izler; kutunun kendisi canlı olarak yeni yerine geçer, ötekiler kayar
+        if (D.kind === 'box') {
+          D.home = { p: D.el.parentNode, n: D.el.nextSibling };
+          const tl = D.el.querySelector('.title'), g = document.createElement('div');
+          g.className = 'lpghost lpgbox'; g.textContent = (tl && tl.textContent.trim()) || '⠿';
+          wrap.appendChild(g); D.gh = g; D.gx = 24; D.gy = 26;
+        }
+        // öğe: tutulan karo parmağı/imleci izler (kopyası), yerinde soluk hali kalır ve öteki öğeler canlı olarak kenara kayar
+        if (D.kind === 'item') {
+          const er = D.el.getBoundingClientRect();
+          D.home = { p: D.el.parentNode, n: D.el.nextSibling };
+          D.gx = (D.sx - er.left) / D.z; D.gy = (D.sy - er.top) / D.z;
+          const g = D.el.cloneNode(true); g.classList.remove('dragging'); g.classList.add('lpghost');
+          g.removeAttribute('data-idx'); g.removeAttribute('data-sec');
+          g.style.width = D.el.offsetWidth + 'px'; g.style.height = D.el.offsetHeight + 'px';
+          wrap.appendChild(g); D.gh = g;
+        }
+        if (D.kind !== 'item') arr(R.querySelectorAll('.colh,.rowh')).forEach((x) => { if (x !== D.el) x.style.display = 'none'; });   // kutu kayarken tutamaklar yerinde kalmasın
       }
       if (D.kind === 'col') {
         // kolon, içindeki sütun sayısı kadar daralabilir: her sütun en dar kanvasta (W, genelde 1280) en az 150 px.
@@ -1075,21 +1113,34 @@ class IsmetHomeCard extends HTMLElement {
         return;
       }
       if (D.kind === 'box') {
+        if (D.gh) { const wr = wrap.getBoundingClientRect(); D.gh.style.left = ((e.clientX - wr.left) / D.z - D.gx) + 'px'; D.gh.style.top = ((e.clientY - wr.top) / D.z - D.gy) + 'px'; }
         const c = colAt(e.clientX); if (!c) return;
         const bx = arr(c.children).filter((x) => x.hasAttribute('data-secs') && x !== D.el);
         let before = null;
         for (let i = 0; i < bx.length; i++) { const r = bx[i].getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { before = bx[i]; break; } }
-        const last = bx[bx.length - 1];
-        const top = before ? before.offsetTop - 8 : (last ? last.offsetTop + last.offsetHeight + 4 : c.offsetTop + 8);
-        line(c.offsetLeft, top, c.offsetWidth);
+        // kutu hemen oraya geçer (sütunun boş yer tutucusu varsa onun önüne)
+        const ref = before || (bx.length ? bx[bx.length - 1].nextSibling : (c.firstChild || null));
+        if (D.el.parentNode !== c || (ref !== D.el && D.el.nextSibling !== ref)) { try { c.insertBefore(D.el, ref); } catch (x) {} }
         D.target = { col: +c.getAttribute('data-col'), sub: +c.getAttribute('data-sub'), before: before ? before.getAttribute('data-secs').split(',')[0] : null };
         return;
       }
       if (D.kind === 'item') {
         clearMarks(); D.target = null;
+        if (D.gh) { const wr = wrap.getBoundingClientRect(); D.gh.style.left = ((e.clientX - wr.left) / D.z - D.gx) + 'px'; D.gh.style.top = ((e.clientY - wr.top) / D.z - D.gy) + 'px'; }
         const under = R.elementFromPoint ? R.elementFromPoint(e.clientX, e.clientY) : null; if (!under) return;
         const srcType = typeOf(D.el.getAttribute('data-sec'));
         const it = under.closest ? under.closest('[data-idx]') : null;
+        // aynı türden öğenin üstünde (karo karonun, çubuk çubuğun): öğe hemen oraya taşınır, ötekiler kayar
+        if (it && it !== D.el && it.classList[0] === D.el.classList[0] && typeOf(it.getAttribute('data-sec')) === srcType) {
+          const r = it.getBoundingClientRect(), horiz = it.classList.contains('tile') || it.classList.contains('bar') || it.classList.contains('cam');
+          const after = horiz ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+          const ref = after ? it.nextSibling : it;
+          if (ref !== D.el && D.el.nextSibling !== ref) it.parentNode.insertBefore(D.el, ref);
+          D.live = true;
+          return;
+        }
+        if (it === D.el) return;
+        // başka türden öğe (ör. karo bölümünde satır): eski işaretle gösterilir
         if (it && it !== D.el && typeOf(it.getAttribute('data-sec')) === srcType) {
           const r = it.getBoundingClientRect(), horiz = it.classList.contains('tile') || it.classList.contains('bar');
           const after = horiz ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
@@ -1099,7 +1150,7 @@ class IsmetHomeCard extends HTMLElement {
         }
         // öğenin üstünde değil: aynı türden bir bölümün kutusuna bırakılırsa sona eklenir
         const bx = under.closest ? under.closest('.box[data-secs]') : null;
-        if (bx) {
+        if (bx && !(D.live && bx.contains(D.el))) {   // canlı taşınan öğe bu kutudaysa yeri zaten belli
           const sid = bx.getAttribute('data-secs').split(',').filter((id) => typeOf(id) === srcType)[0];
           if (sid) { bx.classList.add('dropin'); const s = secById(tab, sid); D.target = { sec: sid, idx: listOf(JSON.parse(JSON.stringify(s))).length }; }
         }
@@ -1111,7 +1162,19 @@ class IsmetHomeCard extends HTMLElement {
       clearMarks();
       const ln = R.querySelector('.dropline'); if (ln) ln.remove();
       if (d.el) d.el.classList.remove('dragging');
+      if (d.gh) d.gh.remove();
       if (!d.on) return;   // sürüklenmedi: tıklama olarak kalır
+      // canlı taşınan öğe: yeni yeri yanındaki öğeden okunur (sonraki öğenin önü ya da öncekinin arkası)
+      let liveT = null;
+      if (d.kind === 'item' && d.live && !d.target) {
+        const sib = (fw) => { let x = fw ? d.el.nextElementSibling : d.el.previousElementSibling; while (x && !x.hasAttribute('data-idx')) x = fw ? x.nextElementSibling : x.previousElementSibling; return x; };
+        const nx = sib(true), pv = sib(false);
+        liveT = nx ? { sec: nx.getAttribute('data-sec'), idx: +nx.getAttribute('data-idx') } : pv ? { sec: pv.getAttribute('data-sec'), idx: +pv.getAttribute('data-idx') + 1 } : null;
+      }
+      // değişiklik olmazsa (ya da kaydedilmezse) öğe/kutu eski yerine döner; kaydedilirse pano zaten yeniden çizilir
+      if (d.home && d.home.p) { try { d.home.p.insertBefore(d.el, d.home.n && d.home.n.parentNode === d.home.p ? d.home.n : null); } catch (e) {} }
+      if (liveT) d.target = liveT;
+      arr(R.querySelectorAll('.colh,.rowh')).forEach((x) => { x.style.display = ''; });
       this._dragged = true; setTimeout(() => { this._dragged = false; }, 0);
       if (d.kind === 'col') { const nt = clone(); nt.columns = d.W; return emit(nt); }
       if (d.kind === 'row') {
@@ -1521,6 +1584,41 @@ class IsmetHomeCard extends HTMLElement {
     el.addEventListener('pointerup', () => finish(true));
     el.addEventListener('pointercancel', () => finish(false));
   }
+  // --- kameralar ---
+  // Görüntü HA'nın kamera vekilinden gelir (entity_picture, içinde HA'nın birkaç dakikada bir yenilediği erişim anahtarı).
+  // Yeni görüntü önce arkada yüklenir, hazır olunca değişir: karo yenilenirken kararıp parlamaz.
+  _camLoad(el) {
+    const p = el._pic; if (!p || el._busy) return;
+    el._busy = true; el._at = Date.now();
+    const url = p + (p.indexOf('?') >= 0 ? '&' : '?') + '_=' + el._at;
+    const im = new Image();
+    im.onload = () => { el._busy = false; el._fail = 0; const img = el.querySelector('img'); if (img) img.src = im.src; el.classList.add('ok'); el.classList.remove('nop'); };
+    // Bazı kameralar bir süre istenmeyince ilk görüntüde hata verir (ör. 3B yazıcı kamerası: önce 500, sonra hep 200).
+    // Tek hata görünmez: 2 ve 4 sn sonra yeniden denenir, eldeki son görüntü kalır. Üç kez üst üste alınamazsa
+    // "Görüntü alınamıyor" (ör. tablet ekranı kapalı, kamera kapalı); sonra da yenileme aralığında denemeye devam edilir.
+    im.onerror = () => {
+      el._busy = false; el._fail = (el._fail || 0) + 1;
+      if (el._fail >= 3) { el.classList.add('nop'); el.classList.remove('ok'); return; }
+      el._at = Date.now() - (el._rf || 10) * 1000 + el._fail * 2000;   // _camTick 2 sn, sonra 4 sn içinde yeniden dener
+    };
+    im.src = this._hass && this._hass.hassUrl ? this._hass.hassUrl(url) : url;
+  }
+  _camTick() {
+    if (document.hidden || !this.isConnected) return;
+    const now = Date.now();
+    (this._cams || []).forEach((el) => {
+      if (el.classList.contains('na') || !el._pic) return;
+      const it = el._item || {}, r = Math.max(2, Math.min(600, parseFloat(it.refresh) || parseFloat(it._secRef) || 10));   // öğenin ayarı, yoksa bölümün (cam_refresh)
+      el._rf = r;
+      if (now - el._at >= r * 1000) this._camLoad(el);
+    });
+  }
+  _camOpen(el) {
+    const id = el.getAttribute('data-cam'), st = this._hass.states[id], it = el._item || {};
+    if (!st) return;
+    const name = this._tx(it.name) || st.attributes.friendly_name || id;
+    IsmetCardPopup._open(this._hass, { title: name, card: { type: 'picture-entity', entity: id, camera_view: 'live', show_name: false, show_state: false }, wide: true }, this._lang);
+  }
   _update() {
     const h = this._hass, S = h.states, lang = this._lang;
     // LEC odalarındaki bir ışık değiştiyse o odada oynayan efekti yeniden sor
@@ -1565,6 +1663,16 @@ class IsmetHomeCard extends HTMLElement {
       this._paintVal(el, st);
     });
     (this._pets || []).forEach((el) => lpPetPaint(el, lang, Date.now()));
+    (this._cams || []).forEach((el) => {
+      const id = el.getAttribute('data-cam'), st = S[id];
+      if (!st || this._last[id] === st) return;
+      // görüntü yalnız Home Assistant'ın kendi adresinden (/api/camera_proxy/...): başka bir siteye istek gitmez
+      const pic = typeof st.attributes.entity_picture === 'string' && /^\/[^\/\\]/.test(st.attributes.entity_picture) ? st.attributes.entity_picture : '';
+      const it = el._item || {}, off = st.state === 'unavailable' || st.state === 'unknown' || !pic;
+      el.classList.toggle('na', off);
+      el.querySelector('.cnm').textContent = this._tx(it.name) || st.attributes.friendly_name || id;
+      if (!off && el._pic !== pic) { el._pic = pic; el._at = 0; el._fail = 0; this._camLoad(el); }
+    });
     (this._txEls || []).forEach((el) => { el.textContent = this._tx(el.getAttribute('data-tx')); });
     (this._ssEls || []).forEach((el) => { const it = el._item || {}; el.textContent = this._sec2(it, it.entity ? S[it.entity] : null) || ''; });
     (this._ents || []).forEach((el) => {

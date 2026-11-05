@@ -112,6 +112,8 @@
 .edit .tile > *, .edit .bar > *, .edit .scene > *, .edit .row > *, .edit .emb > *, .edit .title.season { pointer-events: none; }
 .edit .navb { cursor: pointer; }
 .edit .dragging { opacity: 0.35; }
+.lpghost { position: absolute !important; margin: 0 !important; pointer-events: none; z-index: 20; opacity: 0.95; transform: scale(1.05); box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55); transition: none !important; }
+.lpgbox { width: 240px; padding: 14px 18px; border-radius: 18px; background: rgba(30, 32, 36, 0.96); border: 2px solid #F2A93B; color: #ECEDEF; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: none; }
 .edit .dropl { box-shadow: -6px 0 0 -2px #F2A93B !important; }
 .edit .dropr { box-shadow: 6px 0 0 -2px #F2A93B !important; }
 .edit .dropt { box-shadow: 0 -6px 0 -2px #F2A93B !important; }
@@ -433,3 +435,16 @@
 .bbar .bbv { position: relative; margin-left: auto; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .35s; pointer-events: none; }
 .bbar.bbdrag .bbv, .bbar.bbal.bbon .bbv { opacity: 1; }
 .edit .bbar { cursor: default; }
+/* kameralar (2026-11-05): 16:9 anlık görüntü karosu, adı sol altta; çevrimdışıysa sade yüz */
+.cams { display: grid; grid-gap: 8px; flex: 0 0 auto; align-self: stretch; width: 100%; box-sizing: border-box; }
+.cam { position: relative; padding-top: 56.25%; border-radius: 18px; overflow: hidden; background: var(--lp-embed-bg); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cam img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+.cam.ok img { opacity: 1; }
+.cam .cnm { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 14px 10px; font-weight: 600; font-size: 15px; color: #fff; background: linear-gradient(transparent, rgba(0, 0, 0, 0.6)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cam .cof { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; flex-direction: column; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.55); font-size: 13px; padding-bottom: 20px; }
+.cam .cof .lic, .cam .cof ha-icon { width: 34px; height: 34px; --mdc-icon-size: 34px; opacity: 0.7; margin-bottom: 6px; }
+.cam.na img, .cam.nop img { display: none; }
+.cam.na .cof, .cam.nop .cof { display: flex; }
+.cam .cof .c1, .cam.nop:not(.na) .cof .c0 { display: none; }
+.cam.nop:not(.na) .cof .c1 { display: inline; }
+.cam:active { transform: scale(0.985); }

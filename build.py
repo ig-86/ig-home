@@ -5,7 +5,7 @@ root = pathlib.Path(__file__).parent
 src = root / "src"
 
 # ---- renkli simgeler ----
-# Lemur ailesinin bütün renkli simgelerinin ana kopyası ../lemur-icons klasöründe (Hakan'ın bilgisayarı, git'e girmez).
+# Lemur ailesinin bütün renkli simgelerinin ana kopyası ../lemur-icons klasöründe (geliştirici bilgisayarında, git'e girmez).
 # Klasör varsa oradaki dosyalar depodaki kopyaların yerine konur; yoksa depodaki son kopyalarla derlenir.
 #   mdi.json      → frontend/mdi-color.json  (panonun simge seti, "mdi:ad" ve "lhd:ad")
 #   efektler.json → frontend/lec-icons.json  ("lec:ad" efekt simgeleri; Light Effect Card kurulu olmasa da görünür)
@@ -34,12 +34,16 @@ for master_name, repo_name in (("mdi.json", "mdi-color.json"), ("efektler.json",
         gz.write_bytes(gzip.compress(data.encode("utf-8"), 9, mtime=0))
 
 version = json.loads((root / "custom_components/ismet_home/manifest.json").read_text())["version"]
+# Yenilikler penceresi yalnız ilk kayıt paketin sürümüyle aynıysa çıkar (2026-11-04: 0.17.6'da kalmıştı)
+_m = re.search(r"const LHD_CHANGES = \[\s*\{\s*v:\s*'([^']+)'", (src / "changes.js").read_text(encoding="utf-8"))
+if not _m or _m.group(1) != version:
+    raise SystemExit("src/changes.js en üstteki kayıt v" + (_m.group(1) if _m else "?") + ", paket v" + version + ": Yenilikler'e bu sürümün satırını ekle")
 def load_css(name):
     c = re.sub(r"/\*.*?\*/", "", (src / name).read_text(encoding="utf-8"), flags=re.S)
     return "\n".join(l.strip() for l in c.splitlines() if l.strip())
 css = load_css("base.css")
 admin_css = load_css("admin.css")
-parts = [(src / f).read_text(encoding="utf-8") for f in ("i18n.js", "safe.js", "changes.js", "store.js", "mdic.js", "lec.js", "defaults.js", "demohome.js", "scale.js", "strategy.js", "tpl.js", "panel-card.js", "lightpop.js", "cardpop.js", "autocard.js", "pet.js", "yaml.js", "help.js", "admin.js")]
+parts = [(src / f).read_text(encoding="utf-8") for f in ("i18n.js", "safe.js", "changes.js", "store.js", "autodash.js", "mdic.js", "lec.js", "defaults.js", "demohome.js", "scale.js", "strategy.js", "tpl.js", "panel-card.js", "lightpop.js", "cardpop.js", "autocard.js", "pet.js", "yaml.js", "help.js", "admin.js")]
 errlog = (src / "errlog.js").read_text(encoding="utf-8")
 out = f"""/*! İsmet Home v{version} | GPL-3.0 */
 (() => {{
@@ -55,6 +59,7 @@ const ADMIN_CSS = {json.dumps(admin_css, ensure_ascii=False)};
 const LP_DEFS = [['ll-strategy-dashboard-ismet-home', IsmetHomeStrategy], ['ismet-home-card', IsmetHomeCard], ['ismet-home-admin', IsmetHomeAdmin]];
 const lpDefineAll = () => LP_DEFS.forEach((d) => {{ try {{ if (!window.customElements.get(d[0])) window.customElements.define(d[0], d[1]); }} catch (e) {{}} }});
 window.__ISMET_HD_VER = PANEL_VERSION;
+window.__ISMET_HD_STRATEGY = IsmetHomeStrategy;  // yükleyici (loader.js) generate() çağrısını buraya devreder
 lpDefineAll();
 let lpTries = 0;
 const lpTimer = setInterval(() => {{ lpDefineAll(); if (++lpTries > 300) clearInterval(lpTimer); }}, 100);
@@ -88,3 +93,11 @@ gz = dst.with_name(dst.name + ".gz")
 if not gz.exists() or gzip.decompress(gz.read_bytes()).decode("utf-8") != out:
     gz.write_bytes(gzip.compress(out.encode("utf-8"), 9, mtime=0))
 print(dst, len(out.encode()))
+
+# Yükleyici (2026-11-04, GitHub #3): her sayfaya bu küçük dosya yüklenir; strateji elemanını hemen tanımlar,
+# ana dosyayı arkadan yükler. Ana dosya büyük olduğu için yavaş cihazlarda HA'nın strateji bekleme süresi doluyordu.
+loader = (src / "loader.js").read_text(encoding="utf-8").replace("__VERSION__", version)
+ldst = root / "custom_components/ismet_home/frontend/ismet-home-loader.js"
+if not ldst.exists() or ldst.read_text(encoding="utf-8") != loader:
+    ldst.write_text(loader, encoding="utf-8")
+print(ldst, len(loader.encode()))

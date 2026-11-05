@@ -3,7 +3,11 @@
     "step": {
       "user": {
         "title": "İsmet Home",
-        "description": "Hazır ev panosunu ekler. Bir pano oluştur ve ham yapılandırmasına `strategy: type: custom:ismet-home` yaz. Panoyu sol menüdeki \"İsmet Home\" bölümünden düzenle."
+        "description": "Hazır ev panosunu ekler. \"Panoyu oluştur\" açıksa pano senin için oluşturulur; sayfayı bir kez yenileyince kenar çubuğunda görünür. Panoyu sol menüdeki \"İsmet Home\" bölümünden düzenlersin. (Kendin oluşturmak istersen: yeni bir panonun ham yapılandırmasına `strategy: type: custom:ismet-home` yaz.)",
+        "data": {
+          "create_dashboard": "Panoyu oluştur",
+          "dashboard_title": "Pano adı"
+        }
       }
     },
     "abort": {
