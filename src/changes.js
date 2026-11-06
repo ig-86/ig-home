@@ -2,6 +2,9 @@
 // En yeni sürüm en üstte; ilk kaydın sürümü paketin sürümüyle aynı olmalı, yoksa pencere çıkmaz. Satırlar kısa olsun,
 // ayrıntılar GitHub'daki sürüm notlarında. tr dışındaki diller en'e düşer.
 const LHD_CHANGES = [
+  { v: '1.2.0',
+    tr: ['Telefona özel düzen: yönetim panelinde sağ üstte Düzenlenen: Telefon\'a geçince değişiklikler yalnız telefona yazılır, tablet aynı kalır.', 'Telefonda oda düğmelerinin sırası, adı, simgesi ve görünürlüğü; bölümlerin sırası, görünürlüğü, görünümü ve satırdaki karo sayısı; ışıkların ve öteki öğelerin sırası ve görünürlüğü ayrı ayarlanır.', 'Telefon görünümü: gezinme, ışık görünümü, ışık penceresi, simge stili, iklim kartları ve zemin telefona ayrı seçilir. Tablettekine dön ile geri alınır.'],
+    en: ['Phone-only layout: switch to Editing: Phone at the top right of the admin panel and changes apply to phones only; the tablet stays the same.', 'On phones, set the order, name, icon and visibility of room buttons; the order, visibility, look and tiles per row of sections; and the order and visibility of lights and other items.', 'Phone look: navigation, light look, light window, icon style, climate cards and background can be chosen for phones separately. Back to tablet undoes it.'] },
   { v: '1.1.2',
     tr: ['Açıklama sayfasına İngilizce bölüm eklendi. Panoda değişiklik yok.'],
     en: ['The description page now has an English section. No changes to the dashboard.'] },
